@@ -64,12 +64,16 @@ Uniks instantly saves the raw event and, in the background, extracts structured 
    git clone https://github.com/Nominchuluunb/uniks.git
    cd uniks
    ```
-2. Link the required SPM packages:
+2. Install the `xcodeproj` Ruby gem:
+   ```bash
+   gem install xcodeproj
+   ```
+3. Link the required SPM packages:
    ```bash
    ruby scripts/add_spm_dependencies.rb
    ```
-   > **Note:** `ruby` must be installed. macOS ships with Ruby by default.
-3. Open `uniks.xcodeproj` in Xcode and let it resolve packages.
+   > **Note:** Ruby is required. macOS includes a system Ruby, though you may need to install it via Homebrew or a Ruby version manager on newer systems.
+4. Open `uniks.xcodeproj` in Xcode and let it resolve packages.
 
 ## Build Instructions
 
@@ -105,7 +109,7 @@ Run the test suite on the iOS Simulator:
 xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
 ```
 
-> **Note:** MLX-related tests run only on Apple platforms (iOS Simulator or physical device). They are not supported on Linux because `MLXLMCommon` requires Apple frameworks.
+> **Note:** MLX-related tests run only on Apple platforms (macOS, iOS Simulator, or physical device) and cannot run on Linux because `MLXLMCommon` requires Apple frameworks.
 
 See [TESTING.md](TESTING.md) for detailed testing strategy.
 
