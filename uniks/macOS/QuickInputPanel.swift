@@ -10,6 +10,10 @@ import AppKit
 import Carbon
 
 /// Manages the floating QuickInput panel and global keyboard shortcut on macOS.
+///
+/// - Important: The manager must remain alive while the hotkey is installed.
+///   Call `uninstall()` before the manager is deallocated to unregister the
+///   hotkey and release the reference retained by the Carbon event handler.
 @MainActor
 final class QuickInputPanelManager: ObservableObject {
     private var panel: NSPanel?
@@ -40,14 +44,28 @@ final class QuickInputPanelManager: ObservableObject {
     }
 
     /// Unregisters the global hotkey and removes the Carbon event handler.
+    ///
+    /// This must be called before the manager is deallocated to balance the
+    /// retain passed to Carbon during `install()`.
     func uninstall() {
         if let hotKeyRef {
-            UnregisterEventHotKey(hotKeyRef)
+            let status = UnregisterEventHotKey(hotKeyRef)
+            if status != noErr {
+                print("QuickInputPanel: failed to unregister hotkey (status: \(status))")
+            }
             self.hotKeyRef = nil
         }
+        let handlerWasInstalled = handlerRef != nil
         if let handlerRef {
-            RemoveEventHandler(handlerRef)
+            let status = RemoveEventHandler(handlerRef)
+            if status != noErr {
+                print("QuickInputPanel: failed to remove event handler (status: \(status))")
+            }
             self.handlerRef = nil
+        }
+        // Balance the retain passed to Carbon in `registerGlobalHotkey()`.
+        if handlerWasInstalled {
+            Unmanaged.passUnretained(self).release()
         }
     }
 
@@ -81,6 +99,8 @@ final class QuickInputPanelManager: ObservableObject {
         let hotKeyID = EventHotKeyID(signature: OSType("unks".fourCharCode), id: 1)
         self.hotKeyID = hotKeyID
 
+        let userData = Unmanaged.passRetained(self).toOpaque()
+
         let installStatus = InstallEventHandler(
             GetApplicationEventTarget(),
             { _, event, userData -> OSStatus in
@@ -91,11 +111,13 @@ final class QuickInputPanelManager: ObservableObject {
             },
             1,
             &eventType,
-            Unmanaged.passUnretained(self).toOpaque(),
+            userData,
             &handlerRef
         )
 
         guard installStatus == noErr else {
+            // The retained reference was not handed to Carbon; release it now.
+            Unmanaged.passUnretained(self).release()
             // Diagnostic only; never log user data.
             print("QuickInputPanel: failed to install Carbon event handler (status: \(installStatus))")
             return
