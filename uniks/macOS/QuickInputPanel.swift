@@ -133,6 +133,13 @@ final class QuickInputPanelManager: ObservableObject {
         )
 
         guard registerStatus == noErr else {
+            // Roll back the partially-installed handler so the retained
+            // reference is not leaked.
+            if let handlerRef {
+                RemoveEventHandler(handlerRef)
+                self.handlerRef = nil
+            }
+            Unmanaged.passUnretained(self).release()
             // Diagnostic only; never log user data.
             print("QuickInputPanel: failed to register global hotkey (status: \(registerStatus))")
             return
