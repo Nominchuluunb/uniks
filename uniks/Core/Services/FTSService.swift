@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import SwiftFTS
+@preconcurrency import SwiftFTS
 
 /// A lightweight document wrapper for indexing `HabitEvent.rawInput`.
 struct HabitEventFTSDocument: FullTextSearchable {
@@ -43,18 +43,18 @@ actor FTSService: FTSServiceProtocol {
     /// - Parameter path: File URL for the FTS database. Pass `nil` for an in-memory index.
     init(path: URL? = nil) throws {
         if let path {
-            databaseQueue = try FTSDatabaseQueue(path: path.path)
+            self.databaseQueue = try FTSDatabaseQueue(path: path.path)
         } else {
-            databaseQueue = try FTSDatabaseQueue.makeInMemory()
+            self.databaseQueue = try FTSDatabaseQueue.makeInMemory()
         }
-        indexer = try SearchIndexer(databaseQueue: databaseQueue)
-        engine = try SearchEngine(databaseQueue: databaseQueue)
+        self.indexer = try SearchIndexer(databaseQueue: self.databaseQueue)
+        self.engine = try SearchEngine(databaseQueue: self.databaseQueue)
     }
 
     /// Closes the underlying FTS database queue.
     /// Call this when the service is no longer needed to release resources.
     func close() {
-        databaseQueue.close()
+        self.databaseQueue.close()
     }
 
     /// Indexes a single event's raw input.
@@ -63,21 +63,21 @@ actor FTSService: FTSServiceProtocol {
     ///   - rawInput: The raw text to index.
     func index(eventID: UUID, rawInput: String) async throws {
         let document = Self.document(eventID: eventID, rawInput: rawInput)
-        try await indexer.addItems([document])
+        try await self.indexer.addItems([document])
     }
 
     /// Indexes multiple events' raw inputs.
     /// - Parameter events: A tuple array of event identifiers and raw inputs.
     func index(events: [(id: UUID, rawInput: String)]) async throws {
         let documents = events.map { Self.document(eventID: $0.id, rawInput: $0.rawInput) }
-        try await indexer.addItems(documents)
+        try await self.indexer.addItems(documents)
     }
 
     /// Searches raw inputs and returns matching `HabitEvent` identifiers.
     /// - Parameter query: The search query text.
     /// - Returns: The identifiers of events whose raw input matches the query.
     func search(query: String) async throws -> [UUID] {
-        let results: [HabitEventFTSDocument] = try await engine.search(
+        let results: [HabitEventFTSDocument] = try await self.engine.search(
             query: query,
             factory: { item in
                 HabitEventFTSDocument(
@@ -93,7 +93,7 @@ actor FTSService: FTSServiceProtocol {
     /// Removes an event from the FTS index.
     /// - Parameter eventID: The unique identifier of the event to remove.
     func remove(eventID: UUID) async throws {
-        try await indexer.removeItem(id: eventID.uuidString)
+        try await self.indexer.removeItem(id: eventID.uuidString)
     }
 
     // MARK: - Private helpers

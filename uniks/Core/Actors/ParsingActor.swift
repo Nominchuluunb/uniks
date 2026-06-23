@@ -33,10 +33,16 @@ actor ParsingActor: ParsingActorProtocol {
 
     /// Fetches an existing event by ID, parses its raw input asynchronously,
     /// and persists the updated state.
+    ///
     /// - Parameter eventID: The stable identifier of the event inserted by the
     ///   optimistic UI path.
+    ///
+    /// Fetch and save errors are handled silently: if the event cannot be
+    /// fetched, the method returns early, leaving the event in its current
+    /// state. If the final save fails, the event remains in memory and SwiftData
+    /// will retry on next access.
     func parseAndSave(eventID: UUID) async {
-        let context = ModelContext(container)
+        let context = ModelContext(self.container)
         let descriptor = FetchDescriptor<HabitEvent>(predicate: #Predicate { $0.id == eventID })
 
         guard let event = try? context.fetch(descriptor).first else {
@@ -44,7 +50,7 @@ actor ParsingActor: ParsingActorProtocol {
         }
 
         do {
-            let result = try await engine.parse(rawInput: event.rawInput)
+            let result = try await self.engine.parse(rawInput: event.rawInput)
             event.setParsedPayload(result)
         } catch {
             event.state = .failed

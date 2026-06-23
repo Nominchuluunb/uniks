@@ -18,6 +18,7 @@ struct HabitEventServiceTests {
         let service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
 
         let eventID = try await service.log(rawInput: "Ran 5km")
+        let parsedID = await parser.waitForParse()
 
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<HabitEvent>(predicate: #Predicate { $0.id == eventID })
@@ -25,6 +26,7 @@ struct HabitEventServiceTests {
 
         #expect(event.rawInput == "Ran 5km")
         #expect(event.state == .pending)
+        #expect(parsedID == eventID)
         #expect(await parser.parsedEventIDs.contains(eventID))
     }
 
@@ -75,9 +77,27 @@ struct HabitEventServiceTests {
 
 private actor MockParsingActor: ParsingActorProtocol {
     private(set) var parsedEventIDs: [UUID] = []
+    private var consumedCount = 0
+    private var continuation: CheckedContinuation<UUID, Never>?
 
     func parseAndSave(eventID: UUID) async {
-        parsedEventIDs.append(eventID)
+        self.parsedEventIDs.append(eventID)
+        if let continuation = self.continuation {
+            self.continuation = nil
+            self.consumedCount += 1
+            continuation.resume(returning: eventID)
+        }
+    }
+
+    func waitForParse() async -> UUID {
+        if self.consumedCount < self.parsedEventIDs.count {
+            let eventID = self.parsedEventIDs[self.consumedCount]
+            self.consumedCount += 1
+            return eventID
+        }
+        return await withCheckedContinuation { continuation in
+            self.continuation = continuation
+        }
     }
 }
 
@@ -85,20 +105,20 @@ private actor MockFTSService: FTSServiceProtocol {
     private var index: [UUID: String] = [:]
 
     var indexedEventIDs: [UUID] {
-        Array(index.keys)
+        Array(self.index.keys)
     }
 
     func index(eventID: UUID, rawInput: String) async throws {
-        index[eventID] = rawInput
+        self.index[eventID] = rawInput
     }
 
     func remove(eventID: UUID) async throws {
-        index.removeValue(forKey: eventID)
+        self.index.removeValue(forKey: eventID)
     }
 
     func search(query: String) async throws -> [UUID] {
         let lowercasedQuery = query.lowercased()
-        return index.compactMap { eventID, rawInput in
+        return self.index.compactMap { eventID, rawInput in
             rawInput.lowercased().contains(lowercasedQuery) ? eventID : nil
         }
     }
