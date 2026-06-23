@@ -12,7 +12,7 @@ UNIKS_FILES = [
   'uniks/Core/Protocols/LocalLLMEngine.swift',
   'uniks/Core/Actors/LLMOrchestratorActor.swift',
   'uniks/Core/Actors/ParsingActor.swift',
-  'uniks/Core/Actors/MLXLLMEngine.swift',
+  'uniks/Core/Engines/MLXLLMEngine.swift',
   'uniks/Core/Services/ModelContainer+Factory.swift',
   'uniks/Core/Services/FTSService.swift',
   'uniks/UI/Shared/StatusBadge.swift'
@@ -21,12 +21,16 @@ UNIKS_FILES = [
 TEST_FILES = [
   'uniksTests/MockLLMEngine.swift',
   'uniksTests/HabitEventTests.swift',
-  'uniksTests/ParsingActorTests.swift'
+  'uniksTests/HabitParseResultTests.swift',
+  'uniksTests/ParsingActorTests.swift',
+  'uniksTests/MLXLLMEngineTests.swift',
+  'uniksTests/FTSServiceTests.swift'
 ].freeze
 
 REMOVE_FILES = [
   'uniks/Item.swift',
-  'uniksTests/uniksTests.swift'
+  'uniksTests/uniksTests.swift',
+  'uniks/Core/Actors/MLXLLMEngine.swift'
 ].freeze
 
 project = Xcodeproj::Project.open(PROJECT_PATH)
