@@ -25,7 +25,7 @@ struct EventListView: View {
             .navigationTitle("Events")
             .searchable(text: $viewModel.searchText, prompt: "Search logs")
             .onChange(of: viewModel.searchText) { _, _ in
-                Task { await viewModel.search() }
+                viewModel.search()
             }
         }
     }
@@ -34,7 +34,8 @@ struct EventListView: View {
         if viewModel.searchResults.isEmpty && viewModel.searchText.isEmpty {
             return events
         }
-        return events.filter { viewModel.searchResults.contains($0.id) }
+        let resultIDs = Set(viewModel.searchResults)
+        return events.filter { resultIDs.contains($0.id) }
     }
 }
 
