@@ -112,6 +112,12 @@ private actor MockFTSService: FTSServiceProtocol {
         self.index[eventID] = rawInput
     }
 
+    func index(events: [(id: UUID, rawInput: String)]) async throws {
+        for event in events {
+            self.index[event.id] = event.rawInput
+        }
+    }
+
     func remove(eventID: UUID) async throws {
         self.index.removeValue(forKey: eventID)
     }

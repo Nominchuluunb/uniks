@@ -10,8 +10,8 @@ import Testing
 @testable import uniks
 
 actor MockURLSession: URLSessionProtocol {
-    let responseData: Data
-    let response: URLResponse
+    nonisolated let responseData: Data
+    nonisolated let response: URLResponse
 
     init(responseData: Data, response: URLResponse) {
         self.responseData = responseData

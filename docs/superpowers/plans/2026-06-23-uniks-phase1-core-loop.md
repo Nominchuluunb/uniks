@@ -976,12 +976,22 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    let container: ModelContainer
     let ftsService: any FTSServiceProtocol
+    let service: HabitEventService
+    @State private var eventListViewModel: EventListViewModel
+    @State private var isPresentingQuickInput = false
+
+    init(ftsService: any FTSServiceProtocol, service: HabitEventService) {
+        self.ftsService = ftsService
+        self.service = service
+        _eventListViewModel = State(
+            wrappedValue: EventListViewModel(ftsService: ftsService)
+        )
+    }
 
     var body: some View {
         TabView {
-            EventListView(viewModel: self.eventListViewModel())
+            EventListView(viewModel: eventListViewModel)
                 .tabItem {
                     Label("Events", systemImage: "list.bullet")
                 }
@@ -991,10 +1001,18 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
-    }
-
-    private func eventListViewModel() -> EventListViewModel {
-        EventListViewModel(ftsService: self.ftsService)
+        .toolbar {
+            #if os(iOS)
+            ToolbarItem(placement: .primaryAction) {
+                Button("Log", systemImage: "plus") {
+                    isPresentingQuickInput = true
+                }
+            }
+            #endif
+        }
+        .sheet(isPresented: $isPresentingQuickInput) {
+            QuickInputSheet(viewModel: QuickInputViewModel(service: service))
+        }
     }
 }
 
@@ -1010,7 +1028,7 @@ struct ContentView: View {
             ftsService: ftsService
         )
         return AnyView(
-            ContentView(container: container, ftsService: ftsService)
+            ContentView(ftsService: ftsService, service: service)
                 .modelContainer(container)
         )
     } catch {
@@ -1019,7 +1037,7 @@ struct ContentView: View {
 }
 ```
 
-> `ContentView` now receives the same `FTSService` used by `HabitEventService`, so search and persistence share one index. The `#Preview` avoids `try!` and returns `AnyView` on failure.
+> `ContentView` now receives the same `FTSService` used by `HabitEventService`, so search and persistence share one index. iOS users get a toolbar button that presents `QuickInputSheet`. The `#Preview` avoids `try!` and returns `AnyView` on failure.
 
 - [ ] **Step 2: Update `uniksApp.swift` for macOS hotkey**
 
@@ -1047,6 +1065,7 @@ struct UniksApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     #endif
 
+    @MainActor
     init() {
         do {
             self.container = try ModelContainer.uniksContainer()
@@ -1055,24 +1074,17 @@ struct UniksApp: App {
         }
 
         let preference = EnginePreference.current()
-        let engine: any LocalLLMEngine
-        switch preference {
-        case .mlx:
-            #if targetEnvironment(simulator)
-            engine = OllamaLLMEngine() ?? MockLLMEngine(result: HabitParseResult())
-            #else
-            engine = MLXLLMEngine()
-            #endif
-        case .ollama:
-            engine = OllamaLLMEngine() ?? MockLLMEngine(result: HabitParseResult())
-        case .mock:
-            engine = MockLLMEngine(result: HabitParseResult())
-        }
+        let engine = EngineResolver.preferredEngine(for: preference)
 
         let ftsService: any FTSServiceProtocol
         do {
             let fileManager = FileManager.default
-            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            guard let appSupport = fileManager.urls(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask
+            ).first else {
+                fatalError("Unable to locate application support directory")
+            }
             let uniksDir = appSupport.appendingPathComponent("uniks", isDirectory: true)
             try fileManager.createDirectory(at: uniksDir, withIntermediateDirectories: true)
             let ftsURL = uniksDir.appendingPathComponent("fts.sqlite")
@@ -1099,7 +1111,7 @@ struct UniksApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(container: self.container, ftsService: self.ftsService)
+            ContentView(ftsService: self.ftsService, service: self.service)
         }
         .modelContainer(self.container)
     }
@@ -1113,7 +1125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 #endif
 ```
 
-> `UniksApp` reads `EnginePreference.current()` to build a real engine, creates a persistent `FTSService` in Application Support (falling back to in-memory), and shares that service with both `HabitEventService` and `ContentView`. A missing on-disk `ModelContainer` now fails loudly via `fatalError`. `AppDelegate` is `@MainActor` to satisfy strict concurrency.
+> `UniksApp` reads `EnginePreference.current()` and uses `EngineResolver.preferredEngine(for:)` to build a real engine synchronously (required inside `App.init`), creates a persistent `FTSService` in Application Support (falling back to in-memory), and shares that service with both `HabitEventService` and `ContentView`. A missing on-disk `ModelContainer` now fails loudly via `fatalError`. `AppDelegate` is `@MainActor` to satisfy strict concurrency.
 
 - [ ] **Step 3: Commit**
 

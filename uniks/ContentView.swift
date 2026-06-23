@@ -10,10 +10,13 @@ import SwiftData
 
 struct ContentView: View {
     let ftsService: any FTSServiceProtocol
+    let service: HabitEventService
     @State private var eventListViewModel: EventListViewModel
+    @State private var isPresentingQuickInput = false
 
-    init(ftsService: any FTSServiceProtocol) {
+    init(ftsService: any FTSServiceProtocol, service: HabitEventService) {
         self.ftsService = ftsService
+        self.service = service
         _eventListViewModel = State(
             wrappedValue: EventListViewModel(ftsService: ftsService)
         )
@@ -31,15 +34,34 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
+        .toolbar {
+            #if os(iOS)
+            ToolbarItem(placement: .primaryAction) {
+                Button("Log", systemImage: "plus") {
+                    isPresentingQuickInput = true
+                }
+            }
+            #endif
+        }
+        .sheet(isPresented: $isPresentingQuickInput) {
+            QuickInputSheet(viewModel: QuickInputViewModel(service: service))
+        }
     }
 }
 
 #Preview {
     do {
         let container = try ModelContainer.uniksContainer(inMemory: true)
+        let engine = MockLLMEngine(result: HabitParseResult())
+        let parser = ParsingActor(container: container, engine: engine)
         let ftsService = FTSService.inMemory()
+        let service = HabitEventService(
+            container: container,
+            parsingActor: parser,
+            ftsService: ftsService
+        )
         return AnyView(
-            ContentView(ftsService: ftsService)
+            ContentView(ftsService: ftsService, service: service)
                 .modelContainer(container)
         )
     } catch {

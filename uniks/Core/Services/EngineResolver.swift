@@ -29,32 +29,34 @@ actor EngineResolver {
         self.mockFactory = mockFactory
     }
 
-    /// Returns the best available engine for the current runtime.
-    func resolve() async -> any LocalLLMEngine {
+    /// Synchronously resolves the best engine for a preference. Used where `await` is unavailable (e.g., `App.init`).
+    static func preferredEngine(
+        for preference: EnginePreference,
+        mlxFactory: @escaping @Sendable () -> any LocalLLMEngine = { MLXLLMEngine() },
+        ollamaFactory: @escaping @Sendable () -> (any LocalLLMEngine)? = { OllamaLLMEngine() },
+        mockFactory: @escaping @Sendable () -> any LocalLLMEngine = { MockLLMEngine(result: HabitParseResult()) }
+    ) -> any LocalLLMEngine {
         switch preference {
         case .mlx:
             #if targetEnvironment(simulator)
-            return await fallbackAfterMLX()
+            return ollamaFactory() ?? mockFactory()
             #else
             return mlxFactory()
             #endif
         case .ollama:
-            if let engine = ollamaFactory() {
-                return engine
-            }
-            return mockFactory()
+            return ollamaFactory() ?? mockFactory()
         case .mock:
             return mockFactory()
         }
     }
 
-    #if targetEnvironment(simulator)
-    private func fallbackAfterMLX() async -> any LocalLLMEngine {
-        // On simulator, MLX is unavailable. Try Ollama; if it fails to initialize, return Mock.
-        if let engine = ollamaFactory() {
-            return engine
-        }
-        return mockFactory()
+    /// Returns the best available engine for the current runtime.
+    func resolve() async -> any LocalLLMEngine {
+        Self.preferredEngine(
+            for: preference,
+            mlxFactory: mlxFactory,
+            ollamaFactory: ollamaFactory,
+            mockFactory: mockFactory
+        )
     }
-    #endif
 }

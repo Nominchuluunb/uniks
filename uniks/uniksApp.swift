@@ -30,19 +30,7 @@ struct UniksApp: App {
         }
 
         let preference = EnginePreference.current()
-        let engine: any LocalLLMEngine
-        switch preference {
-        case .mlx:
-            #if targetEnvironment(simulator)
-            engine = OllamaLLMEngine() ?? MockLLMEngine(result: HabitParseResult())
-            #else
-            engine = MLXLLMEngine()
-            #endif
-        case .ollama:
-            engine = OllamaLLMEngine() ?? MockLLMEngine(result: HabitParseResult())
-        case .mock:
-            engine = MockLLMEngine(result: HabitParseResult())
-        }
+        let engine = EngineResolver.preferredEngine(for: preference)
 
         let ftsService: any FTSServiceProtocol
         do {
@@ -79,7 +67,7 @@ struct UniksApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(ftsService: self.ftsService)
+            ContentView(ftsService: self.ftsService, service: self.service)
         }
         .modelContainer(self.container)
     }
