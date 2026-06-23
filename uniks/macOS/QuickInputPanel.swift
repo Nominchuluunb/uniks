@@ -14,6 +14,10 @@ import Carbon
 /// - Important: The manager must remain alive while the hotkey is installed.
 ///   Call `uninstall()` before the manager is deallocated to unregister the
 ///   hotkey and release the reference retained by the Carbon event handler.
+///
+///   Do not rely on `deinit` for cleanup: `deinit` for a `@MainActor` class is
+///   not isolated to the main actor, but `uninstall()` accesses main-actor
+///   state and calls Carbon APIs that must run on the main thread.
 @MainActor
 final class QuickInputPanelManager: ObservableObject {
     private var panel: NSPanel?
@@ -24,10 +28,6 @@ final class QuickInputPanelManager: ObservableObject {
 
     init(viewModel: QuickInputViewModel) {
         self.viewModel = viewModel
-    }
-
-    deinit {
-        uninstall()
     }
 
     /// Creates the panel and registers the global hotkey.
