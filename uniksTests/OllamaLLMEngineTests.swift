@@ -52,11 +52,8 @@ struct OllamaLLMEngineTests {
         let session = MockURLSession(responseData: Data(), statusCode: 404)
         let engine = try #require(OllamaLLMEngine(session: session))
 
-        do {
-            _ = try await engine.parse(rawInput: "Ran 5km")
-            Issue.record("Expected parse to throw")
-        } catch let error as OllamaLLMEngineError {
-            #expect(error == .noServerRunning)
+        await #expect(throws: OllamaLLMEngineError.noServerRunning) {
+            try await engine.parse(rawInput: "Ran 5km")
         }
     }
 
@@ -67,11 +64,8 @@ struct OllamaLLMEngineTests {
         let session = MockURLSession(responseData: ollamaResponse, statusCode: 200)
         let engine = try #require(OllamaLLMEngine(session: session))
 
-        do {
-            _ = try await engine.parse(rawInput: "Ran 5km")
-            Issue.record("Expected parse to throw")
-        } catch let error as OllamaLLMEngineError {
-            #expect(error == .decodingFailed)
+        await #expect(throws: OllamaLLMEngineError.decodingFailed) {
+            try await engine.parse(rawInput: "Ran 5km")
         }
     }
 }
