@@ -41,7 +41,9 @@ actor FTSService {
         engine = try SearchEngine(databaseQueue: databaseQueue)
     }
 
-    deinit {
+    /// Closes the underlying FTS database queue.
+    /// Call this when the service is no longer needed to release resources.
+    func close() {
         databaseQueue.close()
     }
 
