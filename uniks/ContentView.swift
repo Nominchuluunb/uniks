@@ -9,8 +9,11 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    let container: ModelContainer
     let ftsService: any FTSServiceProtocol
+
+    init(ftsService: any FTSServiceProtocol) {
+        self.ftsService = ftsService
+    }
 
     var body: some View {
         TabView {
@@ -36,7 +39,7 @@ struct ContentView: View {
         let container = try ModelContainer.uniksContainer(inMemory: true)
         let ftsService = FTSService.inMemory()
         return AnyView(
-            ContentView(container: container, ftsService: ftsService)
+            ContentView(ftsService: ftsService)
                 .modelContainer(container)
         )
     } catch {

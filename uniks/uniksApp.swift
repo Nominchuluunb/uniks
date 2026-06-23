@@ -75,7 +75,7 @@ struct UniksApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(container: self.container, ftsService: self.ftsService)
+            ContentView(ftsService: self.ftsService)
         }
         .modelContainer(self.container)
     }
