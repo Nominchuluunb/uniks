@@ -15,16 +15,36 @@ enum OllamaLLMEngineError: Error, Sendable, Equatable {
     case decodingFailed
 }
 
+/// A `URLSession`-like abstraction used by `OllamaLLMEngine` for network calls.
+///
+/// This protocol exists primarily to enable deterministic unit tests with a mock client.
+protocol URLSessionProtocol: Sendable {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse)
+}
+
+extension URLSession: URLSessionProtocol {}
+
 /// Parses raw input via a local Ollama server at `http://localhost:11434`.
 actor OllamaLLMEngine: LocalLLMEngine {
-    private static let defaultBaseURL = URL(string: "http://localhost:11434")!
+    private static let defaultBaseURLString = "http://localhost:11434"
 
     private let baseURL: URL
     private let model: String
+    private let session: URLSessionProtocol
 
-    init(baseURL: URL = defaultBaseURL, model: String = "llama3.2:3b") {
+    /// Creates an engine pointing at the given Ollama server.
+    ///
+    /// - Parameters:
+    ///   - baseURL: The Ollama server URL. Defaults to `http://localhost:11434` if nil.
+    ///   - model: The model name to use for generation. Defaults to `llama3.2:3b`.
+    ///   - session: The network session used to perform requests. Defaults to `URLSession.shared`.
+    init?(baseURL: URL? = nil, model: String = "llama3.2:3b", session: URLSessionProtocol = URLSession.shared) {
+        guard let baseURL = baseURL ?? URL(string: Self.defaultBaseURLString) else {
+            return nil
+        }
         self.baseURL = baseURL
         self.model = model
+        self.session = session
     }
 
     /// Sends the raw input to the local Ollama server and decodes the generated JSON into a structured result.
@@ -42,7 +62,7 @@ actor OllamaLLMEngine: LocalLLMEngine {
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw OllamaLLMEngineError.invalidResponse
@@ -56,7 +76,13 @@ actor OllamaLLMEngine: LocalLLMEngine {
             let response: String
         }
 
-        let generateResponse = try JSONDecoder().decode(GenerateResponse.self, from: data)
+        let generateResponse: GenerateResponse
+        do {
+            generateResponse = try JSONDecoder().decode(GenerateResponse.self, from: data)
+        } catch {
+            throw OllamaLLMEngineError.decodingFailed
+        }
+
         let cleaned = generateResponse.response
             .replacingOccurrences(of: "```json", with: "")
             .replacingOccurrences(of: "```", with: "")
@@ -66,10 +92,15 @@ actor OllamaLLMEngine: LocalLLMEngine {
             throw OllamaLLMEngineError.decodingFailed
         }
 
-        return try JSONDecoder().decode(HabitParseResult.self, from: jsonData)
+        do {
+            return try JSONDecoder().decode(HabitParseResult.self, from: jsonData)
+        } catch {
+            throw OllamaLLMEngineError.decodingFailed
+        }
     }
 
-    private static func extractionPrompt(for rawInput: String) -> String {
+    /// Builds the prompt sent to the Ollama model.
+    nonisolated private static func extractionPrompt(for rawInput: String) -> String {
         """
         Extract structured data from the following personal log entry.
         Respond with a single JSON object containing optional keys:
