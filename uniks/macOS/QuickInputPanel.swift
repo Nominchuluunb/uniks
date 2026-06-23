@@ -32,19 +32,19 @@ final class QuickInputPanelManager: ObservableObject {
 
     /// Creates the panel and registers the global hotkey.
     func install() {
-        createPanel()
-        registerGlobalHotkey()
+        self.createPanel()
+        self.registerGlobalHotkey()
     }
 
     /// Brings the QuickInput panel to the front and activates the app.
     func show() {
-        panel?.makeKeyAndOrderFront(nil)
+        self.panel?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
     /// Dismisses the QuickInput panel without releasing it.
     func hide() {
-        panel?.orderOut(nil)
+        self.panel?.orderOut(nil)
     }
 
     /// Unregisters the global hotkey and removes the Carbon event handler.
@@ -52,14 +52,14 @@ final class QuickInputPanelManager: ObservableObject {
     /// This must be called before the manager is deallocated to balance the
     /// retain passed to Carbon during `install()`.
     func uninstall() {
-        if let hotKeyRef {
+        if let hotKeyRef = self.hotKeyRef {
             let status = UnregisterEventHotKey(hotKeyRef)
             if status != noErr {
                 print("QuickInputPanel: failed to unregister hotkey (status: \(status))")
             }
             self.hotKeyRef = nil
         }
-        if let handlerRef {
+        if let handlerRef = self.handlerRef {
             let status = RemoveEventHandler(handlerRef)
             if status == noErr {
                 self.handlerRef = nil
@@ -72,7 +72,7 @@ final class QuickInputPanelManager: ObservableObject {
     }
 
     private func createPanel() {
-        let contentView = QuickInputView(viewModel: viewModel)
+        let contentView = QuickInputView(viewModel: self.viewModel)
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 120),
             styleMask: [.nonactivatingPanel, .titled, .closable, .resizable],
@@ -114,7 +114,7 @@ final class QuickInputPanelManager: ObservableObject {
             1,
             &eventType,
             userData,
-            &handlerRef
+            &self.handlerRef
         )
 
         guard installStatus == noErr else {
@@ -131,13 +131,13 @@ final class QuickInputPanelManager: ObservableObject {
             hotKeyID,
             GetApplicationEventTarget(),
             0,
-            &hotKeyRef
+            &self.hotKeyRef
         )
 
         guard registerStatus == noErr else {
             // Roll back the partially-installed handler so the retained
             // reference is not leaked.
-            if let handlerRef {
+            if let handlerRef = self.handlerRef {
                 let removeStatus = RemoveEventHandler(handlerRef)
                 if removeStatus == noErr {
                     self.handlerRef = nil
