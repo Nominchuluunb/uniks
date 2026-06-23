@@ -56,7 +56,8 @@ struct FTSServiceTests {
         let eventID = UUID()
 
         try await service.index(eventID: eventID, rawInput: "Meditated for 10 minutes")
-        #expect(try await service.search(query: "meditated").count == 1)
+        let indexedResults = try await service.search(query: "meditated")
+        #expect(indexedResults.count == 1)
 
         try await service.remove(eventID: eventID)
         let results = try await service.search(query: "meditated")
