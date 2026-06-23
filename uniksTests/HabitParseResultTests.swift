@@ -5,7 +5,6 @@
 //  Unit tests for HabitParseResult encoding and decoding.
 //
 
-import Foundation
 import Testing
 @testable import uniks
 
@@ -40,11 +39,8 @@ struct HabitParseResultTests {
     }
 
     @Test func decodingInvalidJSONThrows() {
-        do {
-            _ = try HabitParseResult.fromJSON("not valid json")
-            Issue.record("Expected fromJSON to throw decodingFailed")
-        } catch {
-            #expect(error is HabitParseError)
+        #expect(throws: HabitParseError.decodingFailed) {
+            try HabitParseResult.fromJSON("not valid json")
         }
     }
 }
