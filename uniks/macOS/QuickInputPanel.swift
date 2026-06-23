@@ -16,23 +16,39 @@ final class QuickInputPanelManager: ObservableObject {
     private let viewModel: QuickInputViewModel
     private var hotKeyID: EventHotKeyID?
     private var hotKeyRef: EventHotKeyRef?
+    private var handlerRef: EventHandlerRef?
 
     init(viewModel: QuickInputViewModel) {
         self.viewModel = viewModel
     }
 
+    /// Creates the panel and registers the global hotkey.
     func install() {
         createPanel()
         registerGlobalHotkey()
     }
 
+    /// Brings the QuickInput panel to the front and activates the app.
     func show() {
         panel?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    /// Dismisses the QuickInput panel without releasing it.
     func hide() {
         panel?.orderOut(nil)
+    }
+
+    /// Unregisters the global hotkey and removes the Carbon event handler.
+    func uninstall() {
+        if let hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+            self.hotKeyRef = nil
+        }
+        if let handlerRef {
+            RemoveEventHandler(handlerRef)
+            self.handlerRef = nil
+        }
     }
 
     private func createPanel() {
@@ -65,7 +81,7 @@ final class QuickInputPanelManager: ObservableObject {
         let hotKeyID = EventHotKeyID(signature: OSType("unks".fourCharCode), id: 1)
         self.hotKeyID = hotKeyID
 
-        InstallEventHandler(
+        let installStatus = InstallEventHandler(
             GetApplicationEventTarget(),
             { _, event, userData -> OSStatus in
                 guard let userData else { return noErr }
@@ -76,10 +92,16 @@ final class QuickInputPanelManager: ObservableObject {
             1,
             &eventType,
             Unmanaged.passUnretained(self).toOpaque(),
-            nil
+            &handlerRef
         )
 
-        RegisterEventHotKey(
+        guard installStatus == noErr else {
+            // Diagnostic only; never log user data.
+            print("QuickInputPanel: failed to install Carbon event handler (status: \(installStatus))")
+            return
+        }
+
+        let registerStatus = RegisterEventHotKey(
             keyCode,
             modifierFlags,
             hotKeyID,
@@ -87,6 +109,12 @@ final class QuickInputPanelManager: ObservableObject {
             0,
             &hotKeyRef
         )
+
+        guard registerStatus == noErr else {
+            // Diagnostic only; never log user data.
+            print("QuickInputPanel: failed to register global hotkey (status: \(registerStatus))")
+            return
+        }
     }
 }
 
