@@ -41,29 +41,29 @@ actor FTSService {
         engine = try SearchEngine(databaseQueue: databaseQueue)
     }
 
+    deinit {
+        databaseQueue.close()
+    }
+
     /// Indexes a single event's raw input.
-    func index(event: HabitEvent) async throws {
-        let document = HabitEventFTSDocument(
-            id: event.id.uuidString,
-            rawInput: event.rawInput,
-            metadata: .init(eventID: event.id.uuidString)
-        )
+    /// - Parameters:
+    ///   - eventID: The unique identifier of the event.
+    ///   - rawInput: The raw text to index.
+    func index(eventID: UUID, rawInput: String) async throws {
+        let document = Self.document(eventID: eventID, rawInput: rawInput)
         try await indexer.addItems([document])
     }
 
-    /// Indexes multiple events.
-    func index(events: [HabitEvent]) async throws {
-        let documents = events.map {
-            HabitEventFTSDocument(
-                id: $0.id.uuidString,
-                rawInput: $0.rawInput,
-                metadata: .init(eventID: $0.id.uuidString)
-            )
-        }
+    /// Indexes multiple events' raw inputs.
+    /// - Parameter events: A tuple array of event identifiers and raw inputs.
+    func index(events: [(id: UUID, rawInput: String)]) async throws {
+        let documents = events.map { Self.document(eventID: $0.id, rawInput: $0.rawInput) }
         try await indexer.addItems(documents)
     }
 
     /// Searches raw inputs and returns matching `HabitEvent` identifiers.
+    /// - Parameter query: The search query text.
+    /// - Returns: The identifiers of events whose raw input matches the query.
     func search(query: String) async throws -> [UUID] {
         let results: [HabitEventFTSDocument] = try await engine.search(
             query: query,
@@ -79,7 +79,18 @@ actor FTSService {
     }
 
     /// Removes an event from the FTS index.
+    /// - Parameter eventID: The unique identifier of the event to remove.
     func remove(eventID: UUID) async throws {
         try await indexer.removeItem(id: eventID.uuidString)
+    }
+
+    // MARK: - Private helpers
+
+    private static func document(eventID: UUID, rawInput: String) -> HabitEventFTSDocument {
+        HabitEventFTSDocument(
+            id: eventID.uuidString,
+            rawInput: rawInput,
+            metadata: .init(eventID: eventID.uuidString)
+        )
     }
 }
