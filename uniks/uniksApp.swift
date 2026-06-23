@@ -21,6 +21,7 @@ struct UniksApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     #endif
 
+    @MainActor
     init() {
         do {
             self.container = try ModelContainer.uniksContainer()
@@ -46,7 +47,10 @@ struct UniksApp: App {
         let ftsService: any FTSServiceProtocol
         do {
             let fileManager = FileManager.default
-            guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            guard let appSupport = fileManager.urls(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask
+            ).first else {
                 fatalError("Unable to locate application support directory")
             }
             let uniksDir = appSupport.appendingPathComponent("uniks", isDirectory: true)
