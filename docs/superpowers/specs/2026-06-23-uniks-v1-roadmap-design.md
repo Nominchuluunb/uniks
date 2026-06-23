@@ -133,7 +133,7 @@ This model is chosen because the project will later migrate from a single AI ass
 6. **Strict concurrency checking.**
    - Enabled in build settings to enforce `AI_RULES.md` concurrency rules.
 
-> **Note on `LLMOrchestratorActor`:** A placeholder actor exists in the codebase but is not used in v1.0. It is reserved for post-v1.0 engine management (fallback orchestration, model caching, lifecycle). For v1.0, engine selection and fallback are handled by `ParsingActor` or `SettingsService`.
+> **Note on `LLMOrchestratorActor`:** This placeholder was consolidated into `OllamaLLMEngine` during Phase 1. It no longer exists as a separate type. Post-v1.0 engine management (model caching, lifecycle) will be handled by a dedicated actor when needed.
 
 ### 3.3 Data Flow for a Typical Input
 

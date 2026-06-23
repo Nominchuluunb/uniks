@@ -1,6 +1,6 @@
-># AI Rules for Uniks Contributors
+# AI Rules for Uniks Contributors
 
-> This document defines the coding standards and behavioral rules for AI agents and human contributors working on Uniks. Read [SOUL.md](SOUL.md) first.
+This document defines the coding standards and behavioral rules for AI agents and human contributors working on Uniks. Read [SOUL.md](SOUL.md) first.
 
 ## 1. Privacy-First Development
 
