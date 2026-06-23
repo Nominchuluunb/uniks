@@ -10,8 +10,14 @@ xcuserdata/
 *.xcscmblueprint
 
 # Swift Package Manager
+# Package.resolved is intentionally tracked for reproducible app builds.
 .build/
-Package.resolved
+.swiftpm/
+
+# Local LLM model caches
+Models/
+*.safetensors
+huggingface/
 
 # CocoaPods
 Pods/

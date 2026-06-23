@@ -1,0 +1,61 @@
+# SwiftLint configuration for Uniks
+
+included:
+  - uniks
+  - uniksTests
+
+excluded:
+  - uniks.xcodeproj
+  - DerivedData
+  - .build
+
+# Rules
+opt_in_rules:
+  - empty_count
+  - explicit_self
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - joined_default_parameter
+  - legacy_random
+  - multiline_parameters
+  - operator_usage_whitespace
+  - overridden_super_call
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - sorted_first_last
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_closing_braces
+  - weak_delegate
+
+disabled_rules:
+  - trailing_whitespace
+
+# Configuration
+line_length:
+  warning: 120
+  error: 160
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  excluded:
+    - id
+    - x
+    - y
+
+type_name:
+  min_length:
+    warning: 3
+    error: 2
+
+function_body_length:
+  warning: 60
+  error: 100
+
+cyclomatic_complexity:
+  warning: 12
+  error: 20
+
+reporter: "xcode"

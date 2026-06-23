@@ -6,6 +6,26 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0632F7609BC6AED03D225705 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3E0A0CFB335504DB504BCA1 /* StatusBadge.swift */; };
+		2709047B7D559304C5B196B7 /* LLMOrchestratorActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FC5AF426ADD621F139CCD1 /* LLMOrchestratorActor.swift */; };
+		2AB24192F701E907D4DEA5A9 /* SwiftFTS in Frameworks */ = {isa = PBXBuildFile; productRef = D4DCE9C8E6266305E3247891 /* SwiftFTS */; };
+		84C58759EBD3A67347542FB3 /* SwiftFTS in Frameworks */ = {isa = PBXBuildFile; productRef = 82E8CCBDDECCC3976092ADBA /* SwiftFTS */; };
+		8AFC03FEB254C08D85B26CCB /* uniksApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE13B67D65497859309FD19 /* uniksApp.swift */; };
+		95A9458BADF92B390CA07D04 /* HabitEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF903000DC52CB096136BB9 /* HabitEventTests.swift */; };
+		983B81390487C6D7A17E2043 /* LocalLLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C243AFD80738A091E99C9C /* LocalLLMEngine.swift */; };
+		A029549D1AA3BEA79A2D0872 /* ParsingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 806A5388AA4C3F230241E925 /* ParsingActor.swift */; };
+		B3C5A328265A79BF4CFD8461 /* FTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFAD05F2621A8808F19EBFA /* FTSService.swift */; };
+		B6451E0191B3C75C1BED25DE /* HabitEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE864925212E46725665C9A /* HabitEvent.swift */; };
+		B66E4AB221740C297EFB58E4 /* MockLLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11F6E98413AEBEE8E4855FD /* MockLLMEngine.swift */; };
+		B912C63F23148A2A05C27AC3 /* MLXLLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2BFA1D4C76D8E40A8F7E /* MLXLLMEngine.swift */; };
+		D277A519CAAC0CD52D5F3EE0 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 32EC4397B9D5E96064010436 /* MLXLMCommon */; };
+		D90540A51F35AEE1FCBD2C8C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60FCBA51FC839B8B88438BD9 /* ContentView.swift */; };
+		EA044716685B78C3A9ADCC9B /* ModelContainer+Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712DF7B6627FF8FF93ABB11C /* ModelContainer+Factory.swift */; };
+		F03F9F2E4023D2F2770D4D48 /* ParsingActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410529F8BE2444BB630A6877 /* ParsingActorTests.swift */; };
+		FA6EF4D2CB62E783C3C4B6C6 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = DF2340456193B9454A9C4FDF /* MLXLMCommon */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		1231BBD32FEACC32003B0923 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,21 +47,40 @@
 		1231BBC32FEACC31003B0923 /* uniks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = uniks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1231BBD22FEACC32003B0923 /* uniksTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = uniksTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1231BBDC2FEACC32003B0923 /* uniksUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = uniksUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3BE13B67D65497859309FD19 /* uniksApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = uniksApp.swift; sourceTree = "<group>"; };
+		410529F8BE2444BB630A6877 /* ParsingActorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParsingActorTests.swift; sourceTree = "<group>"; };
+		56C243AFD80738A091E99C9C /* LocalLLMEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocalLLMEngine.swift; sourceTree = "<group>"; };
+		60FCBA51FC839B8B88438BD9 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		6AFAD05F2621A8808F19EBFA /* FTSService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FTSService.swift; sourceTree = "<group>"; };
+		712DF7B6627FF8FF93ABB11C /* ModelContainer+Factory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ModelContainer+Factory.swift"; sourceTree = "<group>"; };
+		77FC5AF426ADD621F139CCD1 /* LLMOrchestratorActor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LLMOrchestratorActor.swift; sourceTree = "<group>"; };
+		806A5388AA4C3F230241E925 /* ParsingActor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParsingActor.swift; sourceTree = "<group>"; };
+		C11F6E98413AEBEE8E4855FD /* MockLLMEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockLLMEngine.swift; sourceTree = "<group>"; };
+		CEF903000DC52CB096136BB9 /* HabitEventTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HabitEventTests.swift; sourceTree = "<group>"; };
+		D3E0A0CFB335504DB504BCA1 /* StatusBadge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		DEBB2BFA1D4C76D8E40A8F7E /* MLXLLMEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MLXLLMEngine.swift; sourceTree = "<group>"; };
+		ECE864925212E46725665C9A /* HabitEvent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HabitEvent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1231BBC52FEACC31003B0923 /* uniks */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = uniks;
 			sourceTree = "<group>";
 		};
 		1231BBD52FEACC32003B0923 /* uniksTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = uniksTests;
 			sourceTree = "<group>";
 		};
 		1231BBDF2FEACC32003B0923 /* uniksUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = uniksUITests;
 			sourceTree = "<group>";
 		};
@@ -52,6 +91,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA6EF4D2CB62E783C3C4B6C6 /* MLXLMCommon in Frameworks */,
+				2AB24192F701E907D4DEA5A9 /* SwiftFTS in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,6 +100,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D277A519CAAC0CD52D5F3EE0 /* MLXLMCommon in Frameworks */,
+				84C58759EBD3A67347542FB3 /* SwiftFTS in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,6 +115,43 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		010759B31301AD2EDE0E4511 /* Engines */ = {
+			isa = PBXGroup;
+			children = (
+				C11F6E98413AEBEE8E4855FD /* MockLLMEngine.swift */,
+			);
+			name = Engines;
+			path = Engines;
+			sourceTree = "<group>";
+		};
+		0C92AF04B576A28B611DB1E0 /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				56C243AFD80738A091E99C9C /* LocalLLMEngine.swift */,
+			);
+			path = Protocols;
+			sourceTree = "<group>";
+		};
+		111D52FAEB7B75BF267D35A1 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				AAEE9CEC94897A86CD459262 /* Models */,
+				0C92AF04B576A28B611DB1E0 /* Protocols */,
+				6E8E9C1B23DF2503BEA84B62 /* Actors */,
+				F43638775BECED592E40B694 /* Services */,
+				010759B31301AD2EDE0E4511 /* Engines */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		118DA42BBB7EC1F4A1EB29FF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D3E0A0CFB335504DB504BCA1 /* StatusBadge.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		1231BBBA2FEACC31003B0923 = {
 			isa = PBXGroup;
 			children = (
@@ -79,6 +159,8 @@
 				1231BBD52FEACC32003B0923 /* uniksTests */,
 				1231BBDF2FEACC32003B0923 /* uniksUITests */,
 				1231BBC42FEACC31003B0923 /* Products */,
+				C009D8AE311CF62B5B2A4030 /* uniks */,
+				2C48E0CD1C592C1038F3ADA1 /* uniksTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -90,6 +172,61 @@
 				1231BBDC2FEACC32003B0923 /* uniksUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		2C48E0CD1C592C1038F3ADA1 /* uniksTests */ = {
+			isa = PBXGroup;
+			children = (
+				CEF903000DC52CB096136BB9 /* HabitEventTests.swift */,
+				410529F8BE2444BB630A6877 /* ParsingActorTests.swift */,
+			);
+			path = uniksTests;
+			sourceTree = "<group>";
+		};
+		6E8E9C1B23DF2503BEA84B62 /* Actors */ = {
+			isa = PBXGroup;
+			children = (
+				77FC5AF426ADD621F139CCD1 /* LLMOrchestratorActor.swift */,
+				806A5388AA4C3F230241E925 /* ParsingActor.swift */,
+				DEBB2BFA1D4C76D8E40A8F7E /* MLXLLMEngine.swift */,
+			);
+			path = Actors;
+			sourceTree = "<group>";
+		};
+		98A73FBEE049C9A0A3FC509E /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				118DA42BBB7EC1F4A1EB29FF /* Shared */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		AAEE9CEC94897A86CD459262 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				ECE864925212E46725665C9A /* HabitEvent.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C009D8AE311CF62B5B2A4030 /* uniks */ = {
+			isa = PBXGroup;
+			children = (
+				3BE13B67D65497859309FD19 /* uniksApp.swift */,
+				60FCBA51FC839B8B88438BD9 /* ContentView.swift */,
+				111D52FAEB7B75BF267D35A1 /* Core */,
+				98A73FBEE049C9A0A3FC509E /* UI */,
+			);
+			path = uniks;
+			sourceTree = "<group>";
+		};
+		F43638775BECED592E40B694 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				712DF7B6627FF8FF93ABB11C /* ModelContainer+Factory.swift */,
+				6AFAD05F2621A8808F19EBFA /* FTSService.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +249,8 @@
 			);
 			name = uniks;
 			packageProductDependencies = (
+				DF2340456193B9454A9C4FDF /* MLXLMCommon */,
+				D4DCE9C8E6266305E3247891 /* SwiftFTS */,
 			);
 			productName = uniks;
 			productReference = 1231BBC32FEACC31003B0923 /* uniks.app */;
@@ -135,6 +274,8 @@
 			);
 			name = uniksTests;
 			packageProductDependencies = (
+				32EC4397B9D5E96064010436 /* MLXLMCommon */,
+				82E8CCBDDECCC3976092ADBA /* SwiftFTS */,
 			);
 			productName = uniksTests;
 			productReference = 1231BBD22FEACC32003B0923 /* uniksTests.xctest */;
@@ -157,8 +298,6 @@
 				1231BBDF2FEACC32003B0923 /* uniksUITests */,
 			);
 			name = uniksUITests;
-			packageProductDependencies = (
-			);
 			productName = uniksUITests;
 			productReference = 1231BBDC2FEACC32003B0923 /* uniksUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -195,6 +334,10 @@
 			);
 			mainGroup = 1231BBBA2FEACC31003B0923;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0BC515049A6EA3BF993F0686 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */,
+				3FEC60A3816E679E62C906C9 /* XCRemoteSwiftPackageReference "SwiftFTS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1231BBC42FEACC31003B0923 /* Products */;
 			projectDirPath = "";
@@ -236,6 +379,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8AFC03FEB254C08D85B26CCB /* uniksApp.swift in Sources */,
+				D90540A51F35AEE1FCBD2C8C /* ContentView.swift in Sources */,
+				B6451E0191B3C75C1BED25DE /* HabitEvent.swift in Sources */,
+				983B81390487C6D7A17E2043 /* LocalLLMEngine.swift in Sources */,
+				2709047B7D559304C5B196B7 /* LLMOrchestratorActor.swift in Sources */,
+				A029549D1AA3BEA79A2D0872 /* ParsingActor.swift in Sources */,
+				B912C63F23148A2A05C27AC3 /* MLXLLMEngine.swift in Sources */,
+				EA044716685B78C3A9ADCC9B /* ModelContainer+Factory.swift in Sources */,
+				B3C5A328265A79BF4CFD8461 /* FTSService.swift in Sources */,
+				0632F7609BC6AED03D225705 /* StatusBadge.swift in Sources */,
+				B66E4AB221740C297EFB58E4 /* MockLLMEngine.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +397,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95A9458BADF92B390CA07D04 /* HabitEventTests.swift in Sources */,
+				F03F9F2E4023D2F2770D4D48 /* ParsingActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -607,6 +763,48 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0BC515049A6EA3BF993F0686 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-examples.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		3FEC60A3816E679E62C906C9 /* XCRemoteSwiftPackageReference "SwiftFTS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cbess/SwiftFTS.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		32EC4397B9D5E96064010436 /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0BC515049A6EA3BF993F0686 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLMCommon;
+		};
+		82E8CCBDDECCC3976092ADBA /* SwiftFTS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FEC60A3816E679E62C906C9 /* XCRemoteSwiftPackageReference "SwiftFTS" */;
+			productName = SwiftFTS;
+		};
+		D4DCE9C8E6266305E3247891 /* SwiftFTS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FEC60A3816E679E62C906C9 /* XCRemoteSwiftPackageReference "SwiftFTS" */;
+			productName = SwiftFTS;
+		};
+		DF2340456193B9454A9C4FDF /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0BC515049A6EA3BF993F0686 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLMCommon;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1231BBBB2FEACC31003B0923 /* Project object */;
 }

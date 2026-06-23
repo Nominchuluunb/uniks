@@ -2,7 +2,7 @@
 //  uniksApp.swift
 //  uniks
 //
-//  Created by Nominchuluun Baasankhuu on 23.06.26.
+//  App entry point and shared ModelContainer setup.
 //
 
 import SwiftUI
@@ -10,23 +10,20 @@ import SwiftData
 
 @main
 struct uniksApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+    let container: ModelContainer
 
+    init() {
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            container = try ModelContainer.uniksContainer()
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
-    }()
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(container: container)
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(container)
     }
 }
