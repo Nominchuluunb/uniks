@@ -10,8 +10,8 @@ UNIKS_FILES = [
   'uniks/ContentView.swift',
   'uniks/Core/Models/HabitEvent.swift',
   'uniks/Core/Protocols/LocalLLMEngine.swift',
-  'uniks/Core/Actors/LLMOrchestratorActor.swift',
   'uniks/Core/Actors/ParsingActor.swift',
+  'uniks/Core/Engines/OllamaLLMEngine.swift',
   'uniks/Core/Engines/MLXLLMEngine.swift',
   'uniks/Core/Services/ModelContainer+Factory.swift',
   'uniks/Core/Services/FTSService.swift',
@@ -24,7 +24,8 @@ TEST_FILES = [
   'uniksTests/HabitParseResultTests.swift',
   'uniksTests/ParsingActorTests.swift',
   'uniksTests/MLXLLMEngineTests.swift',
-  'uniksTests/FTSServiceTests.swift'
+  'uniksTests/FTSServiceTests.swift',
+  'uniksTests/OllamaLLMEngineTests.swift'
 ].freeze
 
 REMOVE_FILES = [

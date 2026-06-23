@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0632F7609BC6AED03D225705 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3E0A0CFB335504DB504BCA1 /* StatusBadge.swift */; };
-		2709047B7D559304C5B196B7 /* LLMOrchestratorActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FC5AF426ADD621F139CCD1 /* LLMOrchestratorActor.swift */; };
+		2709047B7D559304C5B196B7 /* OllamaLLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FC5AF426ADD621F139CCD1 /* OllamaLLMEngine.swift */; };
 		2AB24192F701E907D4DEA5A9 /* SwiftFTS in Frameworks */ = {isa = PBXBuildFile; productRef = D4DCE9C8E6266305E3247891 /* SwiftFTS */; };
 		84C58759EBD3A67347542FB3 /* SwiftFTS in Frameworks */ = {isa = PBXBuildFile; productRef = 82E8CCBDDECCC3976092ADBA /* SwiftFTS */; };
 		8AFC03FEB254C08D85B26CCB /* uniksApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE13B67D65497859309FD19 /* uniksApp.swift */; };
@@ -16,6 +16,7 @@
 		983B81390487C6D7A17E2043 /* LocalLLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C243AFD80738A091E99C9C /* LocalLLMEngine.swift */; };
 		9CF5F5AD3B987AFD0BD1BE4B /* FTSServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACBE7CAFE0337B2B644CF15 /* FTSServiceTests.swift */; };
 		16976B72B06CF3E30B113AD0 /* MLXLLMEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89693E5C389151F692B072C2 /* MLXLLMEngineTests.swift */; };
+		28B0F2D026C347ECABAD4160 /* OllamaLLMEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4205F86F25A748FD8CA39061 /* OllamaLLMEngineTests.swift */; };
 		A7C46126AAFFBA94990A454E /* HabitParseResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C520937C3BD7ED8207B2937C /* HabitParseResultTests.swift */; };
 		A029549D1AA3BEA79A2D0872 /* ParsingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 806A5388AA4C3F230241E925 /* ParsingActor.swift */; };
 		B3C5A328265A79BF4CFD8461 /* FTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFAD05F2621A8808F19EBFA /* FTSService.swift */; };
@@ -48,11 +49,12 @@
 		60FCBA51FC839B8B88438BD9 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6AFAD05F2621A8808F19EBFA /* FTSService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FTSService.swift; sourceTree = "<group>"; };
 		712DF7B6627FF8FF93ABB11C /* ModelContainer+Factory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ModelContainer+Factory.swift"; sourceTree = "<group>"; };
-		77FC5AF426ADD621F139CCD1 /* LLMOrchestratorActor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LLMOrchestratorActor.swift; sourceTree = "<group>"; };
+		77FC5AF426ADD621F139CCD1 /* OllamaLLMEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OllamaLLMEngine.swift; sourceTree = "<group>"; };
 		806A5388AA4C3F230241E925 /* ParsingActor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParsingActor.swift; sourceTree = "<group>"; };
 		C11F6E98413AEBEE8E4855FD /* MockLLMEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockLLMEngine.swift; sourceTree = "<group>"; };
 		5ACBE7CAFE0337B2B644CF15 /* FTSServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FTSServiceTests.swift; sourceTree = "<group>"; };
 		89693E5C389151F692B072C2 /* MLXLLMEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MLXLLMEngineTests.swift; sourceTree = "<group>"; };
+		4205F86F25A748FD8CA39061 /* OllamaLLMEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OllamaLLMEngineTests.swift; sourceTree = "<group>"; };
 		C520937C3BD7ED8207B2937C /* HabitParseResultTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HabitParseResultTests.swift; sourceTree = "<group>"; };
 		CEF903000DC52CB096136BB9 /* HabitEventTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HabitEventTests.swift; sourceTree = "<group>"; };
 		D3E0A0CFB335504DB504BCA1 /* StatusBadge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 		010759B31301AD2EDE0E4511 /* Engines */ = {
 			isa = PBXGroup;
 			children = (
+				77FC5AF426ADD621F139CCD1 /* OllamaLLMEngine.swift */,
 				C11F6E98413AEBEE8E4855FD /* MockLLMEngine.swift */,
 				DEBB2BFA1D4C76D8E40A8F7E /* MLXLLMEngine.swift */,
 			);
@@ -165,6 +168,7 @@
 				410529F8BE2444BB630A6877 /* ParsingActorTests.swift */,
 				89693E5C389151F692B072C2 /* MLXLLMEngineTests.swift */,
 				5ACBE7CAFE0337B2B644CF15 /* FTSServiceTests.swift */,
+				4205F86F25A748FD8CA39061 /* OllamaLLMEngineTests.swift */,
 			);
 			path = uniksTests;
 			sourceTree = "<group>";
@@ -172,7 +176,6 @@
 		6E8E9C1B23DF2503BEA84B62 /* Actors */ = {
 			isa = PBXGroup;
 			children = (
-				77FC5AF426ADD621F139CCD1 /* LLMOrchestratorActor.swift */,
 				806A5388AA4C3F230241E925 /* ParsingActor.swift */,
 			);
 			path = Actors;
@@ -335,7 +338,7 @@
 				D90540A51F35AEE1FCBD2C8C /* ContentView.swift in Sources */,
 				B6451E0191B3C75C1BED25DE /* HabitEvent.swift in Sources */,
 				983B81390487C6D7A17E2043 /* LocalLLMEngine.swift in Sources */,
-				2709047B7D559304C5B196B7 /* LLMOrchestratorActor.swift in Sources */,
+				2709047B7D559304C5B196B7 /* OllamaLLMEngine.swift in Sources */,
 				A029549D1AA3BEA79A2D0872 /* ParsingActor.swift in Sources */,
 				B912C63F23148A2A05C27AC3 /* MLXLLMEngine.swift in Sources */,
 				EA044716685B78C3A9ADCC9B /* ModelContainer+Factory.swift in Sources */,
@@ -353,6 +356,7 @@
 				A7C46126AAFFBA94990A454E /* HabitParseResultTests.swift in Sources */,
 				F03F9F2E4023D2F2770D4D48 /* ParsingActorTests.swift in Sources */,
 				16976B72B06CF3E30B113AD0 /* MLXLLMEngineTests.swift in Sources */,
+				28B0F2D026C347ECABAD4160 /* OllamaLLMEngineTests.swift in Sources */,
 				9CF5F5AD3B987AFD0BD1BE4B /* FTSServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -11,23 +11,15 @@ import Testing
 
 actor MockURLSession: URLSessionProtocol {
     let responseData: Data
-    let statusCode: Int
+    let response: URLResponse
 
-    init(responseData: Data, statusCode: Int) {
+    init(responseData: Data, response: URLResponse) {
         self.responseData = responseData
-        self.statusCode = statusCode
+        self.response = response
     }
 
     nonisolated func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        let url = try request.url ?? #require(URL(string: "http://localhost:11434"))
-        guard let response = HTTPURLResponse(
-            url: url,
-            statusCode: statusCode,
-            httpVersion: nil,
-            headerFields: nil
-        ) else {
-            throw URLError(.badServerResponse)
-        }
+        _ = request
         return (responseData, response)
     }
 }
@@ -35,11 +27,18 @@ actor MockURLSession: URLSessionProtocol {
 struct OllamaLLMEngineTests {
 
     @Test func parsesValidResponse() async throws {
+        let url = try #require(URL(string: "http://localhost:11434/api/generate"))
         let ollamaResponse = try #require("""
         {"response": "{\\"category\\": \\"fitness\\", \\"value\\": 5.0, \\"unit\\": \\"km\\"}"}
         """.data(using: .utf8))
-        let session = MockURLSession(responseData: ollamaResponse, statusCode: 200)
-        let engine = try #require(OllamaLLMEngine(session: session))
+        let response = try #require(HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        ))
+        let session = MockURLSession(responseData: ollamaResponse, response: response)
+        let engine = try OllamaLLMEngine(endpoint: url, urlSession: session)
 
         let result = try await engine.parse(rawInput: "Ran 5km")
 
@@ -48,21 +47,51 @@ struct OllamaLLMEngineTests {
         #expect(result.unit == "km")
     }
 
-    @Test func throwsNoServerRunningForNon200Status() async throws {
-        let session = MockURLSession(responseData: Data(), statusCode: 404)
-        let engine = try #require(OllamaLLMEngine(session: session))
+    @Test func throwsHttpStatusForNon2xxResponse() async throws {
+        let url = try #require(URL(string: "http://localhost:11434/api/generate"))
+        let response = try #require(HTTPURLResponse(
+            url: url,
+            statusCode: 404,
+            httpVersion: nil,
+            headerFields: nil
+        ))
+        let session = MockURLSession(responseData: Data(), response: response)
+        let engine = try OllamaLLMEngine(endpoint: url, urlSession: session)
 
-        await #expect(throws: OllamaLLMEngineError.noServerRunning) {
+        await #expect(throws: OllamaLLMEngineError.httpStatus(404)) {
+            try await engine.parse(rawInput: "Ran 5km")
+        }
+    }
+
+    @Test func throwsInvalidResponseForNonHTTPResponse() async throws {
+        let url = try #require(URL(string: "http://localhost:11434/api/generate"))
+        let response = URLResponse(
+            url: url,
+            mimeType: nil,
+            expectedContentLength: 0,
+            textEncodingName: nil
+        )
+        let session = MockURLSession(responseData: Data(), response: response)
+        let engine = try OllamaLLMEngine(endpoint: url, urlSession: session)
+
+        await #expect(throws: OllamaLLMEngineError.invalidResponse) {
             try await engine.parse(rawInput: "Ran 5km")
         }
     }
 
     @Test func throwsDecodingFailedForInvalidJSON() async throws {
+        let url = try #require(URL(string: "http://localhost:11434/api/generate"))
         let ollamaResponse = try #require("""
         {"response": "not valid json"}
         """.data(using: .utf8))
-        let session = MockURLSession(responseData: ollamaResponse, statusCode: 200)
-        let engine = try #require(OllamaLLMEngine(session: session))
+        let response = try #require(HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        ))
+        let session = MockURLSession(responseData: ollamaResponse, response: response)
+        let engine = try OllamaLLMEngine(endpoint: url, urlSession: session)
 
         await #expect(throws: OllamaLLMEngineError.decodingFailed) {
             try await engine.parse(rawInput: "Ran 5km")

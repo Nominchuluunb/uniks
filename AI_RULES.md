@@ -16,7 +16,7 @@
 - **No `DispatchQueue.main.async`.** Use `@MainActor` or `await MainActor.run` where necessary.
 - Isolate long-running work in explicit `actor`s:
   - `ParsingActor` for NLP parsing.
-  - `LLMOrchestratorActor` for localhost network calls.
+  - `OllamaLLMEngine` for localhost network calls.
   - `FTSService` for full-text indexing.
 - Never block the main thread. Persistence, parsing, search, and model loading are background concerns.
 

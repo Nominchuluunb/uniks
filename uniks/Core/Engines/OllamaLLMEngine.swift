@@ -2,16 +2,16 @@
 //  OllamaLLMEngine.swift
 //  uniks
 //
-//  Localhost Ollama parser for user-controlled LLM inference.
+//  Localhost Ollama/LM Studio parser for user-controlled LLM inference.
 //
 
 import Foundation
 
-/// Errors thrown by the Ollama localhost engine.
+/// Errors that can occur when communicating with a localhost LLM endpoint.
 enum OllamaLLMEngineError: Error, Sendable, Equatable {
-    case invalidURL
-    case noServerRunning
+    case invalidEndpoint
     case invalidResponse
+    case httpStatus(Int)
     case decodingFailed
 }
 
@@ -24,89 +24,106 @@ protocol URLSessionProtocol: Sendable {
 
 extension URLSession: URLSessionProtocol {}
 
-/// Parses raw input via a local Ollama server at `http://localhost:11434`.
+/// Parses raw input via a local Ollama or LM Studio server.
 actor OllamaLLMEngine: LocalLLMEngine {
-    private static let defaultBaseURLString = "http://localhost:11434"
+    private let endpoint: URL
+    private let modelName: String
+    private let urlSession: URLSessionProtocol
 
-    private let baseURL: URL
-    private let model: String
-    private let session: URLSessionProtocol
+    /// Default Ollama API endpoint.
+    static let defaultEndpoint = URL(string: "http://localhost:11434/api/generate")
 
-    /// Creates an engine pointing at the given Ollama server.
+    /// Creates an engine pointing at the given localhost LLM endpoint.
     ///
     /// - Parameters:
-    ///   - baseURL: The Ollama server URL. Defaults to `http://localhost:11434` if nil.
-    ///   - model: The model name to use for generation. Defaults to `llama3.2:3b`.
-    ///   - session: The network session used to perform requests. Defaults to `URLSession.shared`.
-    init?(baseURL: URL? = nil, model: String = "llama3.2:3b", session: URLSessionProtocol = URLSession.shared) {
-        guard let baseURL = baseURL ?? URL(string: Self.defaultBaseURLString) else {
-            return nil
+    ///   - endpoint: The server URL. Defaults to `http://localhost:11434/api/generate` if nil.
+    ///   - modelName: The model name to use for generation. Defaults to `llama3.2:3b`.
+    ///   - urlSession: The network session used to perform requests. Defaults to `URLSession.shared`.
+    init(
+        endpoint: URL? = nil,
+        modelName: String = "llama3.2:3b",
+        urlSession: URLSessionProtocol = URLSession.shared
+    ) throws {
+        guard let endpoint = endpoint ?? Self.defaultEndpoint else {
+            throw OllamaLLMEngineError.invalidEndpoint
         }
-        self.baseURL = baseURL
-        self.model = model
-        self.session = session
+        self.endpoint = endpoint
+        self.modelName = modelName
+        self.urlSession = urlSession
     }
 
-    /// Sends the raw input to the local Ollama server and decodes the generated JSON into a structured result.
+    /// Parses raw input by asking the local LLM to extract structured data.
     func parse(rawInput: String) async throws -> HabitParseResult {
-        let url = baseURL.appendingPathComponent("api/generate")
-        var request = URLRequest(url: url)
+        let prompt = Self.buildExtractionPrompt(for: rawInput)
+        let requestBody: [String: Any] = [
+            "model": modelName,
+            "prompt": prompt,
+            "stream": false,
+            "format": "json",
+            "options": [
+                "temperature": 0.0
+            ]
+        ]
+
+        var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
 
-        let body: [String: Any] = [
-            "model": model,
-            "prompt": Self.extractionPrompt(for: rawInput),
-            "stream": false,
-            "format": "json"
-        ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await urlSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw OllamaLLMEngineError.invalidResponse
         }
 
-        guard httpResponse.statusCode == 200 else {
-            throw OllamaLLMEngineError.noServerRunning
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw OllamaLLMEngineError.httpStatus(httpResponse.statusCode)
         }
 
-        struct GenerateResponse: Decodable {
-            let response: String
-        }
-
-        let generateResponse: GenerateResponse
+        let responseText: String
         do {
-            generateResponse = try JSONDecoder().decode(GenerateResponse.self, from: data)
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let text = json["response"] as? String else {
+                throw OllamaLLMEngineError.decodingFailed
+            }
+            responseText = text
+        } catch is OllamaLLMEngineError {
+            throw error
         } catch {
             throw OllamaLLMEngineError.decodingFailed
         }
 
-        let cleaned = generateResponse.response
+        // The model may wrap the JSON in markdown fences; strip them.
+        let cleaned = responseText
             .replacingOccurrences(of: "```json", with: "")
             .replacingOccurrences(of: "```", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard let jsonData = cleaned.data(using: .utf8) else {
+        guard let cleanedData = cleaned.data(using: .utf8) else {
             throw OllamaLLMEngineError.decodingFailed
         }
 
         do {
-            return try JSONDecoder().decode(HabitParseResult.self, from: jsonData)
+            return try JSONDecoder().decode(HabitParseResult.self, from: cleanedData)
         } catch {
             throw OllamaLLMEngineError.decodingFailed
         }
     }
 
-    /// Builds the prompt sent to the Ollama model.
-    nonisolated private static func extractionPrompt(for rawInput: String) -> String {
+    /// Builds the prompt sent to the local LLM.
+    private static nonisolated func buildExtractionPrompt(for rawInput: String) -> String {
         """
-        Extract structured data from the following personal log entry.
-        Respond with a single JSON object containing optional keys:
-        category (string), value (number), unit (string), tags (array of strings), notes (string).
+        Extract structured information from the following user log entry.
+        Return ONLY a JSON object with these fields, all optional except "tags" which defaults to []:
+        {
+          "category": "broad category such as fitness, sleep, hydration, mood, work",
+          "value": numeric value as a number if present,
+          "unit": unit of measurement if present,
+          "tags": ["list", "of", "relevant", "tags"],
+          "notes": "any additional context"
+        }
 
-        Log entry: \(rawInput)
+        User entry: "\(rawInput)"
         """
     }
 }
