@@ -17,14 +17,17 @@ enum OllamaLLMEngineError: Error, Sendable, Equatable {
 
 /// Parses raw input via a local Ollama server at `http://localhost:11434`.
 actor OllamaLLMEngine: LocalLLMEngine {
+    private static let defaultBaseURL = URL(string: "http://localhost:11434")!
+
     private let baseURL: URL
     private let model: String
 
-    init(baseURL: URL = URL(string: "http://localhost:11434")!, model: String = "llama3.2:3b") {
+    init(baseURL: URL = defaultBaseURL, model: String = "llama3.2:3b") {
         self.baseURL = baseURL
         self.model = model
     }
 
+    /// Sends the raw input to the local Ollama server and decodes the generated JSON into a structured result.
     func parse(rawInput: String) async throws -> HabitParseResult {
         let url = baseURL.appendingPathComponent("api/generate")
         var request = URLRequest(url: url)
