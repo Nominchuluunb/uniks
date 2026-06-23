@@ -511,10 +511,9 @@ import Foundation
 import MLXLMCommon
 
 /// Errors specific to the on-device MLX engine.
-enum MLXLLMEngineError: Error, Sendable {
+enum MLXLLMEngineError: Error, Sendable, Equatable {
     case notAvailableOnSimulator
-    case modelNotLoaded
-    case generationFailed(Error)
+    case outputEncodingFailed
 }
 
 /// On-device parser using Apple's MLX framework via `MLXLMCommon`.
@@ -559,7 +558,7 @@ actor MLXLLMEngine: LocalLLMEngine {
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard let data = cleaned.data(using: .utf8) else {
-            throw MLXLLMEngineError.modelNotLoaded
+            throw MLXLLMEngineError.outputEncodingFailed
         }
 
         return try JSONDecoder().decode(HabitParseResult.self, from: data)
@@ -624,29 +623,31 @@ actor FTSService {
         engine = try SearchEngine(databaseQueue: databaseQueue)
     }
 
+    /// Closes the underlying FTS database queue.
+    /// Call this when the service is no longer needed to release resources.
+    func close() {
+        databaseQueue.close()
+    }
+
     /// Indexes a single event's raw input.
-    func index(event: HabitEvent) async throws {
-        let document = HabitEventFTSDocument(
-            id: event.id.uuidString,
-            rawInput: event.rawInput,
-            metadata: .init(eventID: event.id.uuidString)
-        )
+    /// - Parameters:
+    ///   - eventID: The unique identifier of the event.
+    ///   - rawInput: The raw text to index.
+    func index(eventID: UUID, rawInput: String) async throws {
+        let document = Self.document(eventID: eventID, rawInput: rawInput)
         try await indexer.addItems([document])
     }
 
-    /// Indexes multiple events.
-    func index(events: [HabitEvent]) async throws {
-        let documents = events.map {
-            HabitEventFTSDocument(
-                id: $0.id.uuidString,
-                rawInput: $0.rawInput,
-                metadata: .init(eventID: $0.id.uuidString)
-            )
-        }
+    /// Indexes multiple events' raw inputs.
+    /// - Parameter events: A tuple array of event identifiers and raw inputs.
+    func index(events: [(id: UUID, rawInput: String)]) async throws {
+        let documents = events.map { Self.document(eventID: $0.id, rawInput: $0.rawInput) }
         try await indexer.addItems(documents)
     }
 
     /// Searches raw inputs and returns matching `HabitEvent` identifiers.
+    /// - Parameter query: The search query text.
+    /// - Returns: The identifiers of events whose raw input matches the query.
     func search(query: String) async throws -> [UUID] {
         let results: [HabitEventFTSDocument] = try await engine.search(
             query: query,
@@ -662,8 +663,19 @@ actor FTSService {
     }
 
     /// Removes an event from the FTS index.
+    /// - Parameter eventID: The unique identifier of the event to remove.
     func remove(eventID: UUID) async throws {
         try await indexer.removeItem(id: eventID.uuidString)
+    }
+
+    // MARK: - Private helpers
+
+    private static func document(eventID: UUID, rawInput: String) -> HabitEventFTSDocument {
+        HabitEventFTSDocument(
+            id: eventID.uuidString,
+            rawInput: rawInput,
+            metadata: .init(eventID: eventID.uuidString)
+        )
     }
 }
 ```
@@ -676,10 +688,120 @@ xcodebuild -project uniks.xcodeproj -scheme uniks -destination 'platform=macOS' 
 
 Expected: Build succeeds with no new warnings from the engine or service files.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Add unit tests for `MLXLLMEngine` and `FTSService`**
+
+Per `AI_RULES.md` §6, every actor and service must have unit tests.
+
+Create `uniksTests/MLXLLMEngineTests.swift`:
+
+```swift
+//
+//  MLXLLMEngineTests.swift
+//  uniksTests
+//
+//  Unit tests for the on-device MLX inference engine.
+//  NOTE: These tests must be run on an iOS Simulator or macOS destination;
+//  they cannot be executed on Linux because MLXLMCommon requires Apple platforms.
+//
+
+import Foundation
+import Testing
+@testable import uniks
+
+struct MLXLLMEngineTests {
+
+    #if targetEnvironment(simulator)
+    @Test func parseThrowsNotAvailableOnSimulator() async {
+        let engine = MLXLLMEngine()
+        do {
+            _ = try await engine.parse(rawInput: "test")
+            Issue.record("Expected parse to throw notAvailableOnSimulator")
+        } catch let error as MLXLLMEngineError {
+            #expect(error == .notAvailableOnSimulator)
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
+        }
+    }
+    #endif
+}
+```
+
+Create `uniksTests/FTSServiceTests.swift`:
+
+```swift
+//
+//  FTSServiceTests.swift
+//  uniksTests
+//
+//  Unit tests for the full-text search service over raw habit inputs.
+//
+
+import Foundation
+import Testing
+@testable import uniks
+
+struct FTSServiceTests {
+
+    @Test func indexesAndFindsSingleEvent() async throws {
+        let service = try FTSService()
+        let eventID = UUID()
+
+        try await service.index(eventID: eventID, rawInput: "Drank 500ml water")
+        let results = try await service.search(query: "water")
+
+        #expect(results.count == 1)
+        #expect(results.first == eventID)
+    }
+
+    @Test func indexesAndFindsMultipleEvents() async throws {
+        let service = try FTSService()
+        let waterID = UUID()
+        let runID = UUID()
+
+        try await service.index(events: [
+            (id: waterID, rawInput: "Drank 500ml water"),
+            (id: runID, rawInput: "Ran 5km in the morning")
+        ])
+
+        let waterResults = try await service.search(query: "water")
+        let runResults = try await service.search(query: "morning")
+
+        #expect(waterResults.count == 1)
+        #expect(waterResults.first == waterID)
+        #expect(runResults.count == 1)
+        #expect(runResults.first == runID)
+    }
+
+    @Test func searchReturnsEmptyArrayForNoMatch() async throws {
+        let service = try FTSService()
+        let eventID = UUID()
+
+        try await service.index(eventID: eventID, rawInput: "Drank coffee")
+        let results = try await service.search(query: "tea")
+
+        #expect(results.isEmpty)
+    }
+
+    @Test func removeDeletesEventFromIndex() async throws {
+        let service = try FTSService()
+        let eventID = UUID()
+
+        try await service.index(eventID: eventID, rawInput: "Meditated for 10 minutes")
+        let indexedResults = try await service.search(query: "meditated")
+        #expect(indexedResults.count == 1)
+
+        try await service.remove(eventID: eventID)
+        let results = try await service.search(query: "meditated")
+
+        #expect(results.isEmpty)
+    }
+}
+```
+
+- [ ] **Step 7: Commit**
 
 ```bash
-git add uniks.xcodeproj/project.pbxproj uniks/Core/Engines/MLXLLMEngine.swift uniks/Core/Services/FTSService.swift
+git add uniks.xcodeproj/project.pbxproj uniks/Core/Engines/MLXLLMEngine.swift uniks/Core/Services/FTSService.swift uniksTests/MLXLLMEngineTests.swift uniksTests/FTSServiceTests.swift
 git commit -m "chore: link MLXLMCommon and SwiftFTS SPM dependencies"
 ```
 
