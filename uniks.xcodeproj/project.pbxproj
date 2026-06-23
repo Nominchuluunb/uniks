@@ -14,6 +14,9 @@
 		8AFC03FEB254C08D85B26CCB /* uniksApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE13B67D65497859309FD19 /* uniksApp.swift */; };
 		95A9458BADF92B390CA07D04 /* HabitEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF903000DC52CB096136BB9 /* HabitEventTests.swift */; };
 		983B81390487C6D7A17E2043 /* LocalLLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C243AFD80738A091E99C9C /* LocalLLMEngine.swift */; };
+		9CF5F5AD3B987AFD0BD1BE4B /* FTSServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACBE7CAFE0337B2B644CF15 /* FTSServiceTests.swift */; };
+		16976B72B06CF3E30B113AD0 /* MLXLLMEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89693E5C389151F692B072C2 /* MLXLLMEngineTests.swift */; };
+		A7C46126AAFFBA94990A454E /* HabitParseResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C520937C3BD7ED8207B2937C /* HabitParseResultTests.swift */; };
 		A029549D1AA3BEA79A2D0872 /* ParsingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 806A5388AA4C3F230241E925 /* ParsingActor.swift */; };
 		B3C5A328265A79BF4CFD8461 /* FTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFAD05F2621A8808F19EBFA /* FTSService.swift */; };
 		B6451E0191B3C75C1BED25DE /* HabitEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE864925212E46725665C9A /* HabitEvent.swift */; };
@@ -56,6 +59,9 @@
 		77FC5AF426ADD621F139CCD1 /* LLMOrchestratorActor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LLMOrchestratorActor.swift; sourceTree = "<group>"; };
 		806A5388AA4C3F230241E925 /* ParsingActor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParsingActor.swift; sourceTree = "<group>"; };
 		C11F6E98413AEBEE8E4855FD /* MockLLMEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockLLMEngine.swift; sourceTree = "<group>"; };
+		5ACBE7CAFE0337B2B644CF15 /* FTSServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FTSServiceTests.swift; sourceTree = "<group>"; };
+		89693E5C389151F692B072C2 /* MLXLLMEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MLXLLMEngineTests.swift; sourceTree = "<group>"; };
+		C520937C3BD7ED8207B2937C /* HabitParseResultTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HabitParseResultTests.swift; sourceTree = "<group>"; };
 		CEF903000DC52CB096136BB9 /* HabitEventTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HabitEventTests.swift; sourceTree = "<group>"; };
 		D3E0A0CFB335504DB504BCA1 /* StatusBadge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
 		DEBB2BFA1D4C76D8E40A8F7E /* MLXLLMEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MLXLLMEngine.swift; sourceTree = "<group>"; };
@@ -119,6 +125,7 @@
 			isa = PBXGroup;
 			children = (
 				C11F6E98413AEBEE8E4855FD /* MockLLMEngine.swift */,
+				DEBB2BFA1D4C76D8E40A8F7E /* MLXLLMEngine.swift */,
 			);
 			name = Engines;
 			path = Engines;
@@ -178,7 +185,10 @@
 			isa = PBXGroup;
 			children = (
 				CEF903000DC52CB096136BB9 /* HabitEventTests.swift */,
+				C520937C3BD7ED8207B2937C /* HabitParseResultTests.swift */,
 				410529F8BE2444BB630A6877 /* ParsingActorTests.swift */,
+				89693E5C389151F692B072C2 /* MLXLLMEngineTests.swift */,
+				5ACBE7CAFE0337B2B644CF15 /* FTSServiceTests.swift */,
 			);
 			path = uniksTests;
 			sourceTree = "<group>";
@@ -188,7 +198,6 @@
 			children = (
 				77FC5AF426ADD621F139CCD1 /* LLMOrchestratorActor.swift */,
 				806A5388AA4C3F230241E925 /* ParsingActor.swift */,
-				DEBB2BFA1D4C76D8E40A8F7E /* MLXLLMEngine.swift */,
 			);
 			path = Actors;
 			sourceTree = "<group>";
@@ -398,7 +407,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				95A9458BADF92B390CA07D04 /* HabitEventTests.swift in Sources */,
+				A7C46126AAFFBA94990A454E /* HabitParseResultTests.swift in Sources */,
 				F03F9F2E4023D2F2770D4D48 /* ParsingActorTests.swift in Sources */,
+				16976B72B06CF3E30B113AD0 /* MLXLLMEngineTests.swift in Sources */,
+				9CF5F5AD3B987AFD0BD1BE4B /* FTSServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -575,8 +587,9 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 26.5;
 			};
@@ -618,8 +631,9 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 26.5;
 			};
@@ -642,8 +656,9 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/uniks.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/uniks";
 				XROS_DEPLOYMENT_TARGET = 26.5;
@@ -667,8 +682,9 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/uniks.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/uniks";
 				XROS_DEPLOYMENT_TARGET = 26.5;
@@ -692,7 +708,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_TARGET_NAME = uniks;
 				XROS_DEPLOYMENT_TARGET = 26.5;
@@ -716,7 +732,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_TARGET_NAME = uniks;
 				XROS_DEPLOYMENT_TARGET = 26.5;
