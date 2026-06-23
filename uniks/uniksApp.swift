@@ -12,8 +12,9 @@ import AppKit
 #endif
 
 @main
-struct uniksApp: App {
+struct UniksApp: App {
     private let container: ModelContainer
+    private let ftsService: any FTSServiceProtocol
     private let service: HabitEventService
 
     #if os(macOS)
@@ -21,30 +22,65 @@ struct uniksApp: App {
     #endif
 
     init() {
-        self.container = (try? ModelContainer.uniksContainer()) ?? ModelContainer.uniksContainer(inMemory: true)
+        do {
+            self.container = try ModelContainer.uniksContainer()
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
 
-        let engine = MockLLMEngine(result: HabitParseResult())
-        let parser = ParsingActor(container: container, engine: engine)
-        let fts = FTSService.inMemory()
-        self.service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
+        let preference = EnginePreference.current()
+        let engine: any LocalLLMEngine
+        switch preference {
+        case .mlx:
+            #if targetEnvironment(simulator)
+            engine = OllamaLLMEngine() ?? MockLLMEngine(result: HabitParseResult())
+            #else
+            engine = MLXLLMEngine()
+            #endif
+        case .ollama:
+            engine = OllamaLLMEngine() ?? MockLLMEngine(result: HabitParseResult())
+        case .mock:
+            engine = MockLLMEngine(result: HabitParseResult())
+        }
+
+        let ftsService: any FTSServiceProtocol
+        do {
+            let fileManager = FileManager.default
+            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let uniksDir = appSupport.appendingPathComponent("uniks", isDirectory: true)
+            try fileManager.createDirectory(at: uniksDir, withIntermediateDirectories: true)
+            let ftsURL = uniksDir.appendingPathComponent("fts.sqlite")
+            ftsService = try FTSService(path: ftsURL)
+        } catch {
+            ftsService = FTSService.inMemory()
+        }
+        self.ftsService = ftsService
+
+        let parser = ParsingActor(container: self.container, engine: engine)
+        self.service = HabitEventService(
+            container: self.container,
+            parsingActor: parser,
+            ftsService: self.ftsService
+        )
 
         #if os(macOS)
-        let viewModel = QuickInputViewModel(service: service)
+        let viewModel = QuickInputViewModel(service: self.service)
         let panelManager = QuickInputPanelManager(viewModel: viewModel)
         panelManager.install()
-        appDelegate.panelManager = panelManager
+        self.appDelegate.panelManager = panelManager
         #endif
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView(container: container, service: service)
+            ContentView(container: self.container, ftsService: self.ftsService)
         }
-        .modelContainer(container)
+        .modelContainer(self.container)
     }
 }
 
 #if os(macOS)
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var panelManager: QuickInputPanelManager?
 }

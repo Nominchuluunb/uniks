@@ -977,11 +977,11 @@ import SwiftData
 
 struct ContentView: View {
     let container: ModelContainer
-    let service: HabitEventService
+    let ftsService: any FTSServiceProtocol
 
     var body: some View {
         TabView {
-            EventListView(viewModel: eventListViewModel())
+            EventListView(viewModel: self.eventListViewModel())
                 .tabItem {
                     Label("Events", systemImage: "list.bullet")
                 }
@@ -991,16 +991,35 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
-        .modelContainer(container)
     }
 
     private func eventListViewModel() -> EventListViewModel {
-        EventListViewModel(ftsService: FTSService.inMemory())
+        EventListViewModel(ftsService: self.ftsService)
+    }
+}
+
+#Preview {
+    do {
+        let container = try ModelContainer.uniksContainer(inMemory: true)
+        let engine = MockLLMEngine(result: HabitParseResult())
+        let parser = ParsingActor(container: container, engine: engine)
+        let ftsService = FTSService.inMemory()
+        let service = HabitEventService(
+            container: container,
+            parsingActor: parser,
+            ftsService: ftsService
+        )
+        return AnyView(
+            ContentView(container: container, ftsService: ftsService)
+                .modelContainer(container)
+        )
+    } catch {
+        return AnyView(Text("Preview failed"))
     }
 }
 ```
 
-> `FTSService.inMemory()` creates an in-memory queue that always succeeds; it is used for previews and fallback.
+> `ContentView` now receives the same `FTSService` used by `HabitEventService`, so search and persistence share one index. The `#Preview` avoids `try!` and returns `AnyView` on failure.
 
 - [ ] **Step 2: Update `uniksApp.swift` for macOS hotkey**
 
@@ -1014,10 +1033,14 @@ struct ContentView: View {
 
 import SwiftUI
 import SwiftData
+#if os(macOS)
+import AppKit
+#endif
 
 @main
-struct uniksApp: App {
+struct UniksApp: App {
     private let container: ModelContainer
+    private let ftsService: any FTSServiceProtocol
     private let service: HabitEventService
 
     #if os(macOS)
@@ -1025,43 +1048,78 @@ struct uniksApp: App {
     #endif
 
     init() {
-        self.container = (try? ModelContainer.uniksContainer()) ?? ModelContainer.uniksContainer(inMemory: true)
+        do {
+            self.container = try ModelContainer.uniksContainer()
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
 
-        let engine = MockLLMEngine(result: HabitParseResult())
-        let parser = ParsingActor(container: container, engine: engine)
-        let fts = FTSService.inMemory()
-        self.service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
+        let preference = EnginePreference.current()
+        let engine: any LocalLLMEngine
+        switch preference {
+        case .mlx:
+            #if targetEnvironment(simulator)
+            engine = OllamaLLMEngine() ?? MockLLMEngine(result: HabitParseResult())
+            #else
+            engine = MLXLLMEngine()
+            #endif
+        case .ollama:
+            engine = OllamaLLMEngine() ?? MockLLMEngine(result: HabitParseResult())
+        case .mock:
+            engine = MockLLMEngine(result: HabitParseResult())
+        }
+
+        let ftsService: any FTSServiceProtocol
+        do {
+            let fileManager = FileManager.default
+            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let uniksDir = appSupport.appendingPathComponent("uniks", isDirectory: true)
+            try fileManager.createDirectory(at: uniksDir, withIntermediateDirectories: true)
+            let ftsURL = uniksDir.appendingPathComponent("fts.sqlite")
+            ftsService = try FTSService(path: ftsURL)
+        } catch {
+            ftsService = FTSService.inMemory()
+        }
+        self.ftsService = ftsService
+
+        let parser = ParsingActor(container: self.container, engine: engine)
+        self.service = HabitEventService(
+            container: self.container,
+            parsingActor: parser,
+            ftsService: self.ftsService
+        )
 
         #if os(macOS)
-        let viewModel = QuickInputViewModel(service: service)
+        let viewModel = QuickInputViewModel(service: self.service)
         let panelManager = QuickInputPanelManager(viewModel: viewModel)
         panelManager.install()
-        appDelegate.panelManager = panelManager
+        self.appDelegate.panelManager = panelManager
         #endif
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView(container: container, service: service)
+            ContentView(container: self.container, ftsService: self.ftsService)
         }
-        .modelContainer(container)
+        .modelContainer(self.container)
     }
 }
 
 #if os(macOS)
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var panelManager: QuickInputPanelManager?
 }
 #endif
 ```
 
-> The macOS global hotkey and panel manager wiring will be finalized once `HabitEventService` is injectable. For Phase 1, the app launches with the tabbed interface; the hotkey integration is a follow-up refinement.
+> `UniksApp` reads `EnginePreference.current()` to build a real engine, creates a persistent `FTSService` in Application Support (falling back to in-memory), and shares that service with both `HabitEventService` and `ContentView`. A missing on-disk `ModelContainer` now fails loudly via `fatalError`. `AppDelegate` is `@MainActor` to satisfy strict concurrency.
 
 - [ ] **Step 3: Commit**
 
 ```bash
 git add uniks/ContentView.swift uniks/uniksApp.swift
-git commit -m "feat: wire ContentView, tabs, and app entry point"
+git commit -m "fix: wire shared FTS service, real engine, and production persistence"
 ```
 
 ---
