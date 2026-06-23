@@ -15,7 +15,7 @@ final class EventListViewModel {
     var isSearching: Bool = false
 
     var isSearchActive: Bool {
-        !searchText.isEmpty || !searchResults.isEmpty
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private let ftsService: any FTSServiceProtocol
@@ -31,24 +31,28 @@ final class EventListViewModel {
         let task = Task { [weak self] in
             guard let self else { return }
 
-            let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmed = self.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else {
-                searchResults = []
-                isSearching = false
+                guard self.searchTask === task else { return }
+                self.searchResults = []
+                self.isSearching = false
                 return
             }
 
-            isSearching = true
-            defer { if searchTask === task { isSearching = false } }
+            guard self.searchTask === task else { return }
+            self.isSearching = true
+            defer { if self.searchTask === task { self.isSearching = false } }
 
             do {
-                let results = try await ftsService.search(query: trimmed)
+                let results = try await self.ftsService.search(query: trimmed)
                 try Task.checkCancellation()
-                searchResults = results
+                guard self.searchTask === task else { return }
+                self.searchResults = results
             } catch is CancellationError {
                 // no-op
             } catch {
-                searchResults = []
+                guard self.searchTask === task else { return }
+                self.searchResults = []
             }
         }
         searchTask = task
