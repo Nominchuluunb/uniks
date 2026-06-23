@@ -36,7 +36,6 @@ actor ParsingActor {
         do {
             let result = try await engine.parse(rawInput: event.rawInput)
             event.setParsedPayload(result)
-            event.state = .parsed
         } catch {
             event.state = .failed
         }
