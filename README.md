@@ -54,20 +54,28 @@ Uniks instantly saves the raw event and, in the background, extracts structured 
 
 - macOS 14+ / iOS 17+
 - Xcode 16+
-- Swift 6.0+
+- Swift 6.0+ with strict concurrency
 - Physical Apple Silicon device for MLX inference (simulator uses MockEngine)
+
+## First-Time Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Nominchuluunb/uniks.git
+   cd uniks
+   ```
+2. Link the required SPM packages:
+   ```bash
+   ruby scripts/add_spm_dependencies.rb
+   ```
+   > **Note:** `ruby` must be installed. macOS ships with Ruby by default.
+3. Open `uniks.xcodeproj` in Xcode and let it resolve packages.
 
 ## Build Instructions
 
-```bash
-git clone https://github.com/Nominchuluunb/uniks.git
-cd uniks
-open uniks.xcodeproj
-```
-
 In Xcode:
 1. Select the `uniks` target.
-2. Choose a physical device or the My Mac destination.
+2. Choose a physical device, the iOS Simulator, or the My Mac destination.
 3. Build and run (`Cmd + R`).
 
 > **Note:** On the iOS Simulator, the MLX engine is automatically replaced by a deterministic mock engine because MLX requires Metal GPU support.
@@ -85,9 +93,19 @@ If you prefer a larger localhost model:
 
 ## Testing
 
+Run the test suite on macOS:
+
 ```bash
 xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=macOS'
 ```
+
+Run the test suite on the iOS Simulator:
+
+```bash
+xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+```
+
+> **Note:** MLX-related tests run only on Apple platforms (iOS Simulator or physical device). They are not supported on Linux because `MLXLMCommon` requires Apple frameworks.
 
 See [TESTING.md](TESTING.md) for detailed testing strategy.
 
