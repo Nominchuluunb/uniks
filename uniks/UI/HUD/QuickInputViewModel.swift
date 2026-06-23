@@ -15,9 +15,11 @@ final class QuickInputViewModel {
     var errorMessage: String?
 
     private let service: HabitEventService
+    private let onSaved: (() -> Void)?
 
-    init(service: HabitEventService) {
+    init(service: HabitEventService, onSaved: (() -> Void)? = nil) {
         self.service = service
+        self.onSaved = onSaved
     }
 
     func submit() async {
@@ -31,6 +33,7 @@ final class QuickInputViewModel {
         do {
             _ = try await service.log(rawInput: trimmed)
             text = ""
+            onSaved?()
         } catch {
             errorMessage = "Could not save event."
         }

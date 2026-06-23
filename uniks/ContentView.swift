@@ -44,7 +44,12 @@ struct ContentView: View {
             #endif
         }
         .sheet(isPresented: $isPresentingQuickInput) {
-            QuickInputSheet(viewModel: QuickInputViewModel(service: service))
+            QuickInputSheet(
+                viewModel: QuickInputViewModel(
+                    service: service,
+                    onSaved: { isPresentingQuickInput = false }
+                )
+            )
         }
     }
 }

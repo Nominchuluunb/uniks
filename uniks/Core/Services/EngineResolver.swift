@@ -30,7 +30,7 @@ actor EngineResolver {
     }
 
     /// Synchronously resolves the best engine for a preference. Used where `await` is unavailable (e.g., `App.init`).
-    static func preferredEngine(
+    static nonisolated func preferredEngine(
         for preference: EnginePreference,
         mlxFactory: @escaping @Sendable () -> any LocalLLMEngine = { MLXLLMEngine() },
         ollamaFactory: @escaping @Sendable () -> (any LocalLLMEngine)? = { OllamaLLMEngine() },
