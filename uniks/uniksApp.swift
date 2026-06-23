@@ -60,6 +60,9 @@ struct UniksApp: App {
         #if os(macOS)
         let viewModel = QuickInputViewModel(service: self.service)
         let panelManager = QuickInputPanelManager(viewModel: viewModel)
+        viewModel.onSaved = { [weak panelManager] in
+            panelManager?.hide()
+        }
         panelManager.install()
         self.appDelegate.panelManager = panelManager
         #endif

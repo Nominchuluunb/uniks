@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 
 @MainActor
 @Observable
@@ -15,9 +16,9 @@ final class QuickInputViewModel {
     var errorMessage: String?
 
     private let service: HabitEventService
-    private let onSaved: (() -> Void)?
+    var onSaved: (@MainActor () -> Void)?
 
-    init(service: HabitEventService, onSaved: (() -> Void)? = nil) {
+    init(service: HabitEventService, onSaved: (@MainActor () -> Void)? = nil) {
         self.service = service
         self.onSaved = onSaved
     }
