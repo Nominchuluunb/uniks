@@ -622,10 +622,6 @@
 			};
 			name = Release;
 		};
-			name = Debug;
-		};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
