@@ -19,7 +19,7 @@ actor MockURLSession: URLSessionProtocol {
     }
 
     nonisolated func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        let url = request.url ?? URL(string: "http://localhost:11434")!
+        let url = try request.url ?? #require(URL(string: "http://localhost:11434"))
         guard let response = HTTPURLResponse(
             url: url,
             statusCode: statusCode,
@@ -35,9 +35,9 @@ actor MockURLSession: URLSessionProtocol {
 struct OllamaLLMEngineTests {
 
     @Test func parsesValidResponse() async throws {
-        let ollamaResponse = """
+        let ollamaResponse = try #require("""
         {"response": "{\\"category\\": \\"fitness\\", \\"value\\": 5.0, \\"unit\\": \\"km\\"}"}
-        """.data(using: .utf8)!
+        """.data(using: .utf8))
         let session = MockURLSession(responseData: ollamaResponse, statusCode: 200)
         let engine = try #require(OllamaLLMEngine(session: session))
 
@@ -61,9 +61,9 @@ struct OllamaLLMEngineTests {
     }
 
     @Test func throwsDecodingFailedForInvalidJSON() async throws {
-        let ollamaResponse = """
+        let ollamaResponse = try #require("""
         {"response": "not valid json"}
-        """.data(using: .utf8)!
+        """.data(using: .utf8))
         let session = MockURLSession(responseData: ollamaResponse, statusCode: 200)
         let engine = try #require(OllamaLLMEngine(session: session))
 
