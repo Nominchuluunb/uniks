@@ -26,6 +26,10 @@ final class QuickInputPanelManager: ObservableObject {
         self.viewModel = viewModel
     }
 
+    deinit {
+        uninstall()
+    }
+
     /// Creates the panel and registers the global hotkey.
     func install() {
         createPanel()
@@ -55,17 +59,15 @@ final class QuickInputPanelManager: ObservableObject {
             }
             self.hotKeyRef = nil
         }
-        let handlerWasInstalled = handlerRef != nil
         if let handlerRef {
             let status = RemoveEventHandler(handlerRef)
-            if status != noErr {
+            if status == noErr {
+                self.handlerRef = nil
+                // Balance the retain passed to Carbon in `registerGlobalHotkey()`.
+                Unmanaged.passUnretained(self).release()
+            } else {
                 print("QuickInputPanel: failed to remove event handler (status: \(status))")
             }
-            self.handlerRef = nil
-        }
-        // Balance the retain passed to Carbon in `registerGlobalHotkey()`.
-        if handlerWasInstalled {
-            Unmanaged.passUnretained(self).release()
         }
     }
 
@@ -136,10 +138,14 @@ final class QuickInputPanelManager: ObservableObject {
             // Roll back the partially-installed handler so the retained
             // reference is not leaked.
             if let handlerRef {
-                RemoveEventHandler(handlerRef)
-                self.handlerRef = nil
+                let removeStatus = RemoveEventHandler(handlerRef)
+                if removeStatus == noErr {
+                    self.handlerRef = nil
+                    Unmanaged.passUnretained(self).release()
+                } else {
+                    print("QuickInputPanel: failed to remove partial event handler (status: \(removeStatus))")
+                }
             }
-            Unmanaged.passUnretained(self).release()
             // Diagnostic only; never log user data.
             print("QuickInputPanel: failed to register global hotkey (status: \(registerStatus))")
             return
