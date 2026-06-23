@@ -46,7 +46,9 @@ struct UniksApp: App {
         let ftsService: any FTSServiceProtocol
         do {
             let fileManager = FileManager.default
-            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+                fatalError("Unable to locate application support directory")
+            }
             let uniksDir = appSupport.appendingPathComponent("uniks", isDirectory: true)
             try fileManager.createDirectory(at: uniksDir, withIntermediateDirectories: true)
             let ftsURL = uniksDir.appendingPathComponent("fts.sqlite")

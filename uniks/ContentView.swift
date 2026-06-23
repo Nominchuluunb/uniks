@@ -34,14 +34,7 @@ struct ContentView: View {
 #Preview {
     do {
         let container = try ModelContainer.uniksContainer(inMemory: true)
-        let engine = MockLLMEngine(result: HabitParseResult())
-        let parser = ParsingActor(container: container, engine: engine)
         let ftsService = FTSService.inMemory()
-        let service = HabitEventService(
-            container: container,
-            parsingActor: parser,
-            ftsService: ftsService
-        )
         return AnyView(
             ContentView(container: container, ftsService: ftsService)
                 .modelContainer(container)
