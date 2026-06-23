@@ -1077,15 +1077,12 @@ Add to `FTSService`:
 
 ```swift
 /// Creates an in-memory FTS service. Never fails; useful for previews and fallbacks.
-static func inMemory() -> FTSService {
-    (try? FTSService(path: nil)) ?? FTSService.noOp()
-}
-
-private static func noOp() -> FTSService {
-    // This path should never be reached because `FTSService(path: nil)` uses an in-memory queue.
-    fatalError("Failed to create even an in-memory FTSService")
+static func inMemory() -> any FTSServiceProtocol {
+    (try? FTSService(path: nil)) ?? NoOpFTSService()
 }
 ```
+
+`NoOpFTSService` is a private actor conforming to `FTSServiceProtocol` that silently drops index/remove calls and returns empty search results.
 
 Replace any `FTSService.inMemoryNoOp()` references in the UI with `FTSService.inMemory()`.
 

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+// SwiftFTS is not yet Sendable-annotated; @preconcurrency keeps actor isolation clean.
 @preconcurrency import SwiftFTS
 
 /// A lightweight document wrapper for indexing `HabitEvent.rawInput`.
@@ -28,6 +29,9 @@ struct HabitEventFTSDocument: FullTextSearchable {
 protocol FTSServiceProtocol: Sendable {
     /// Indexes a single event's raw input.
     func index(eventID: UUID, rawInput: String) async throws
+
+    /// Indexes multiple events' raw inputs.
+    func index(events: [(id: UUID, rawInput: String)]) async throws
 
     /// Searches raw inputs and returns matching event identifiers.
     func search(query: String) async throws -> [UUID]
@@ -55,13 +59,8 @@ actor FTSService: FTSServiceProtocol {
     }
 
     /// Creates an in-memory FTS service. Never fails; useful for previews and fallbacks.
-    static func inMemory() -> FTSService {
-        (try? FTSService(path: nil)) ?? FTSService.noOp()
-    }
-
-    private static func noOp() -> FTSService {
-        // This path should never be reached because `FTSService(path: nil)` uses an in-memory queue.
-        fatalError("Failed to create even an in-memory FTSService")
+    static func inMemory() -> any FTSServiceProtocol {
+        (try? FTSService(path: nil)) ?? NoOpFTSService()
     }
 
     /// Closes the underlying FTS database queue.
@@ -96,7 +95,7 @@ actor FTSService: FTSServiceProtocol {
                 HabitEventFTSDocument(
                     id: item.id,
                     rawInput: item.text,
-                    metadata: try? item.metadata()
+                    metadata: try item.metadata()
                 )
             }
         )
@@ -118,4 +117,13 @@ actor FTSService: FTSServiceProtocol {
             metadata: .init(eventID: eventID.uuidString)
         )
     }
+}
+
+// MARK: - No-op fallback
+
+private actor NoOpFTSService: FTSServiceProtocol {
+    func index(eventID: UUID, rawInput: String) async throws {}
+    func index(events: [(id: UUID, rawInput: String)]) async throws {}
+    func search(query: String) async throws -> [UUID] { [] }
+    func remove(eventID: UUID) async throws {}
 }
