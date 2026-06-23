@@ -5,8 +5,6 @@
 //  Deterministic local LLM engine for previews, simulator, and tests.
 //
 
-import Foundation
-
 /// A deterministic engine that returns a fixed result or throws on demand.
 /// Useful for SwiftUI previews, simulator builds, and unit tests.
 struct MockLLMEngine: LocalLLMEngine {

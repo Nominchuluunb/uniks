@@ -5,8 +5,6 @@
 //  Protocol abstraction for all local NLP parsing engines.
 //
 
-import Foundation
-
 /// An engine that can parse a raw natural-language input into a structured
 /// `HabitParseResult` without sending data to a remote server.
 protocol LocalLLMEngine: Sendable {

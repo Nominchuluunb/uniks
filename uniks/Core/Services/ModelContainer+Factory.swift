@@ -2,7 +2,7 @@
 //  ModelContainer+Factory.swift
 //  uniks
 //
-//  Centralized SwiftData container configuration with WAL optimization.
+//  Centralized SwiftData container configuration.
 //
 
 import Foundation
