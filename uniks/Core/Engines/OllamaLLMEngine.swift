@@ -9,7 +9,6 @@ import Foundation
 
 /// Errors that can occur when communicating with a localhost LLM endpoint.
 enum OllamaLLMEngineError: Error, Sendable, Equatable {
-    case invalidEndpoint
     case invalidResponse
     case httpStatus(Int)
     case decodingFailed
@@ -39,13 +38,13 @@ actor OllamaLLMEngine: LocalLLMEngine {
     ///   - endpoint: The server URL. Defaults to `http://localhost:11434/api/generate` if nil.
     ///   - modelName: The model name to use for generation. Defaults to `llama3.2:3b`.
     ///   - urlSession: The network session used to perform requests. Defaults to `URLSession.shared`.
-    init(
+    init?(
         endpoint: URL? = nil,
         modelName: String = "llama3.2:3b",
         urlSession: URLSessionProtocol = URLSession.shared
-    ) throws {
+    ) {
         guard let endpoint = endpoint ?? Self.defaultEndpoint else {
-            throw OllamaLLMEngineError.invalidEndpoint
+            return nil
         }
         self.endpoint = endpoint
         self.modelName = modelName

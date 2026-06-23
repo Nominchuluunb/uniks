@@ -38,7 +38,7 @@ struct OllamaLLMEngineTests {
             headerFields: nil
         ))
         let session = MockURLSession(responseData: ollamaResponse, response: response)
-        let engine = try OllamaLLMEngine(endpoint: url, urlSession: session)
+        let engine = try #require(OllamaLLMEngine(endpoint: url, urlSession: session))
 
         let result = try await engine.parse(rawInput: "Ran 5km")
 
@@ -56,7 +56,7 @@ struct OllamaLLMEngineTests {
             headerFields: nil
         ))
         let session = MockURLSession(responseData: Data(), response: response)
-        let engine = try OllamaLLMEngine(endpoint: url, urlSession: session)
+        let engine = try #require(OllamaLLMEngine(endpoint: url, urlSession: session))
 
         await #expect(throws: OllamaLLMEngineError.httpStatus(404)) {
             try await engine.parse(rawInput: "Ran 5km")
@@ -72,7 +72,7 @@ struct OllamaLLMEngineTests {
             textEncodingName: nil
         )
         let session = MockURLSession(responseData: Data(), response: response)
-        let engine = try OllamaLLMEngine(endpoint: url, urlSession: session)
+        let engine = try #require(OllamaLLMEngine(endpoint: url, urlSession: session))
 
         await #expect(throws: OllamaLLMEngineError.invalidResponse) {
             try await engine.parse(rawInput: "Ran 5km")
@@ -91,7 +91,7 @@ struct OllamaLLMEngineTests {
             headerFields: nil
         ))
         let session = MockURLSession(responseData: ollamaResponse, response: response)
-        let engine = try OllamaLLMEngine(endpoint: url, urlSession: session)
+        let engine = try #require(OllamaLLMEngine(endpoint: url, urlSession: session))
 
         await #expect(throws: OllamaLLMEngineError.decodingFailed) {
             try await engine.parse(rawInput: "Ran 5km")

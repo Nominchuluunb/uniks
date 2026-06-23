@@ -13,6 +13,7 @@ UNIKS_FILES = [
   'uniks/Core/Actors/ParsingActor.swift',
   'uniks/Core/Engines/OllamaLLMEngine.swift',
   'uniks/Core/Engines/MLXLLMEngine.swift',
+  'uniks/Core/Services/EngineResolver.swift',
   'uniks/Core/Services/ModelContainer+Factory.swift',
   'uniks/Core/Services/FTSService.swift',
   'uniks/UI/Shared/StatusBadge.swift'
@@ -25,7 +26,8 @@ TEST_FILES = [
   'uniksTests/ParsingActorTests.swift',
   'uniksTests/MLXLLMEngineTests.swift',
   'uniksTests/FTSServiceTests.swift',
-  'uniksTests/OllamaLLMEngineTests.swift'
+  'uniksTests/OllamaLLMEngineTests.swift',
+  'uniksTests/EngineResolverTests.swift'
 ].freeze
 
 REMOVE_FILES = [
