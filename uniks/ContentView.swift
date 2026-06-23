@@ -10,14 +10,18 @@ import SwiftData
 
 struct ContentView: View {
     let ftsService: any FTSServiceProtocol
+    @State private var eventListViewModel: EventListViewModel
 
     init(ftsService: any FTSServiceProtocol) {
         self.ftsService = ftsService
+        _eventListViewModel = State(
+            wrappedValue: EventListViewModel(ftsService: ftsService)
+        )
     }
 
     var body: some View {
         TabView {
-            EventListView(viewModel: self.eventListViewModel())
+            EventListView(viewModel: eventListViewModel)
                 .tabItem {
                     Label("Events", systemImage: "list.bullet")
                 }
@@ -27,10 +31,6 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
-    }
-
-    private func eventListViewModel() -> EventListViewModel {
-        EventListViewModel(ftsService: self.ftsService)
     }
 }
 
