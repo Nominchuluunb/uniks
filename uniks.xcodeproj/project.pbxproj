@@ -322,14 +322,14 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					1231BBC22FEACC31003B0923 = {
-						CreatedOnToolsVersion = 26.5;
+						CreatedOnToolsVersion = 16.0;
 					};
 					1231BBD12FEACC32003B0923 = {
-						CreatedOnToolsVersion = 26.5;
+						CreatedOnToolsVersion = 16.0;
 						TestTargetID = 1231BBC22FEACC31003B0923;
 					};
 					1231BBDB2FEACC32003B0923 = {
-						CreatedOnToolsVersion = 26.5;
+						CreatedOnToolsVersion = 16.0;
 						TestTargetID = 1231BBC22FEACC31003B0923;
 					};
 				};
