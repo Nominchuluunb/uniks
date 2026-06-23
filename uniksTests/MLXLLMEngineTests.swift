@@ -16,9 +16,13 @@ struct MLXLLMEngineTests {
     #if targetEnvironment(simulator)
     @Test func parseThrowsNotAvailableOnSimulator() async {
         let engine = MLXLLMEngine()
-
-        await #expect(throws: MLXLLMEngineError.notAvailableOnSimulator) {
-            _ = try await engine.parse(rawInput: "Drank 500ml water")
+        do {
+            _ = try await engine.parse(rawInput: "test")
+            Issue.record("Expected parse to throw notAvailableOnSimulator")
+        } catch let error as MLXLLMEngineError {
+            #expect(error == .notAvailableOnSimulator)
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
     #endif
