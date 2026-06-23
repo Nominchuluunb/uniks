@@ -31,7 +31,7 @@ struct EventListView: View {
     }
 
     private var filteredEvents: [HabitEvent] {
-        if viewModel.searchResults.isEmpty && viewModel.searchText.isEmpty {
+        if !viewModel.isSearchActive {
             return events
         }
         let resultIDs = Set(viewModel.searchResults)

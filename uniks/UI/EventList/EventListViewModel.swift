@@ -14,6 +14,10 @@ final class EventListViewModel {
     var searchResults: [UUID] = []
     var isSearching: Bool = false
 
+    var isSearchActive: Bool {
+        !searchText.isEmpty || !searchResults.isEmpty
+    }
+
     private let ftsService: any FTSServiceProtocol
     private var searchTask: Task<Void, Never>?
 
@@ -24,17 +28,18 @@ final class EventListViewModel {
     func search() {
         searchTask?.cancel()
 
-        searchTask = Task { [weak self] in
+        let task = Task { [weak self] in
             guard let self else { return }
 
             let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else {
                 searchResults = []
+                isSearching = false
                 return
             }
 
             isSearching = true
-            defer { isSearching = false }
+            defer { if searchTask === task { isSearching = false } }
 
             do {
                 let results = try await ftsService.search(query: trimmed)
@@ -46,5 +51,6 @@ final class EventListViewModel {
                 searchResults = []
             }
         }
+        searchTask = task
     }
 }
