@@ -29,6 +29,9 @@ protocol FTSServiceProtocol: Sendable {
     /// Indexes a single event's raw input.
     func index(eventID: UUID, rawInput: String) async throws
 
+    /// Searches raw inputs and returns matching event identifiers.
+    func search(query: String) async throws -> [UUID]
+
     /// Removes an event from the FTS index.
     func remove(eventID: UUID) async throws
 }
