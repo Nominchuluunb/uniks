@@ -22,7 +22,6 @@ import Carbon
 final class QuickInputPanelManager: ObservableObject {
     private var panel: NSPanel?
     private let viewModel: QuickInputViewModel
-    private var hotKeyID: EventHotKeyID?
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
 
@@ -99,13 +98,12 @@ final class QuickInputPanelManager: ObservableObject {
         )
 
         let hotKeyID = EventHotKeyID(signature: OSType("unks".fourCharCode), id: 1)
-        self.hotKeyID = hotKeyID
 
         let userData = Unmanaged.passRetained(self).toOpaque()
 
         let installStatus = InstallEventHandler(
             GetApplicationEventTarget(),
-            { _, event, userData -> OSStatus in
+            { _, _, userData -> OSStatus in
                 guard let userData else { return noErr }
                 let manager = Unmanaged<QuickInputPanelManager>.fromOpaque(userData).takeUnretainedValue()
                 Task { @MainActor in manager.show() }
