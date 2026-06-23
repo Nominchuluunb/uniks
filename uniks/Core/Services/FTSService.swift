@@ -54,6 +54,16 @@ actor FTSService: FTSServiceProtocol {
         self.engine = try SearchEngine(databaseQueue: self.databaseQueue)
     }
 
+    /// Creates an in-memory FTS service. Never fails; useful for previews and fallbacks.
+    static func inMemory() -> FTSService {
+        (try? FTSService(path: nil)) ?? FTSService.noOp()
+    }
+
+    private static func noOp() -> FTSService {
+        // This path should never be reached because `FTSService(path: nil)` uses an in-memory queue.
+        fatalError("Failed to create even an in-memory FTSService")
+    }
+
     /// Closes the underlying FTS database queue.
     /// Call this when the service is no longer needed to release resources.
     func close() {
