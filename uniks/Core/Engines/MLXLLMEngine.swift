@@ -9,7 +9,7 @@ import Foundation
 import MLXLMCommon
 
 /// Errors specific to the on-device MLX engine.
-enum MLXLLMEngineError: Error, Sendable {
+enum MLXLLMEngineError: Error, Sendable, Equatable {
     case notAvailableOnSimulator
     case outputEncodingFailed
 }
