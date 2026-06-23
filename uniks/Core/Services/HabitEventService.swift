@@ -11,10 +11,14 @@ import SwiftData
 /// Service responsible for the end-to-end habit event ingestion path.
 actor HabitEventService {
     private let container: ModelContainer
-    private let parsingActor: ParsingActor
-    private let ftsService: FTSService
+    private let parsingActor: any ParsingActorProtocol
+    private let ftsService: any FTSServiceProtocol
 
-    init(container: ModelContainer, parsingActor: ParsingActor, ftsService: FTSService) {
+    init(
+        container: ModelContainer,
+        parsingActor: any ParsingActorProtocol,
+        ftsService: any FTSServiceProtocol
+    ) {
         self.container = container
         self.parsingActor = parsingActor
         self.ftsService = ftsService
@@ -24,7 +28,7 @@ actor HabitEventService {
     /// - Parameter rawInput: The user's original text.
     /// - Returns: The stable identifier of the inserted event.
     func log(rawInput: String) async throws -> UUID {
-        let context = ModelContext(container)
+        let context = ModelContext(self.container)
         let event = HabitEvent(rawInput: rawInput)
         context.insert(event)
         try context.save()
@@ -32,20 +36,22 @@ actor HabitEventService {
         let eventID = event.id
         let raw = event.rawInput
 
-        try await ftsService.index(eventID: eventID, rawInput: raw)
+        try await self.ftsService.index(eventID: eventID, rawInput: raw)
 
         // Background parsing must not block the return of the event ID.
         Task {
-            await parsingActor.parseAndSave(eventID: eventID)
+            await self.parsingActor.parseAndSave(eventID: eventID)
         }
 
         return eventID
     }
 
     /// Deletes an event from SwiftData and the FTS index.
+    ///
     /// - Parameter eventID: The stable identifier of the event to delete.
+    ///   If no event exists for this identifier, the method returns without throwing.
     func delete(eventID: UUID) async throws {
-        let context = ModelContext(container)
+        let context = ModelContext(self.container)
         let descriptor = FetchDescriptor<HabitEvent>(predicate: #Predicate { $0.id == eventID })
         guard let event = try context.fetch(descriptor).first else {
             return
@@ -53,6 +59,6 @@ actor HabitEventService {
         context.delete(event)
         try context.save()
 
-        try await ftsService.remove(eventID: eventID)
+        try await self.ftsService.remove(eventID: eventID)
     }
 }

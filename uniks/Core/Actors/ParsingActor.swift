@@ -8,11 +8,21 @@
 import Foundation
 import SwiftData
 
+/// Protocol abstraction for background parsing actors so services can depend on
+/// a capability rather than a concrete type.
+protocol ParsingActorProtocol: Sendable {
+    /// Fetches an existing event by ID, parses its raw input asynchronously,
+    /// and persists the updated state.
+    /// - Parameter eventID: The stable identifier of the event inserted by the
+    ///   optimistic UI path.
+    func parseAndSave(eventID: UUID) async
+}
+
 /// Background actor responsible for running the local NLP engine and updating
 /// the persisted `HabitEvent` state. The actor owns its own `ModelContext`
 /// derived from a `Sendable` `ModelContainer`, so no non-Sendable context is
 /// passed across concurrency domains.
-actor ParsingActor {
+actor ParsingActor: ParsingActorProtocol {
     private let engine: any LocalLLMEngine
     private let container: ModelContainer
 

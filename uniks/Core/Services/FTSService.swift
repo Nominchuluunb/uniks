@@ -23,8 +23,18 @@ struct HabitEventFTSDocument: FullTextSearchable {
     var indexMetadata: Metadata? { metadata }
 }
 
+/// Protocol abstraction for full-text indexing services so callers can depend
+/// on a capability rather than a concrete type.
+protocol FTSServiceProtocol: Sendable {
+    /// Indexes a single event's raw input.
+    func index(eventID: UUID, rawInput: String) async throws
+
+    /// Removes an event from the FTS index.
+    func remove(eventID: UUID) async throws
+}
+
 /// Actor that manages FTS5 indexing and search for raw habit event inputs.
-actor FTSService {
+actor FTSService: FTSServiceProtocol {
     private let databaseQueue: FTSDatabaseQueue
     private let indexer: SearchIndexer
     private let engine: SearchEngine

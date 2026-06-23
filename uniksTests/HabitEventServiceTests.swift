@@ -5,7 +5,6 @@
 //  Unit tests for the habit event ingestion service.
 //
 
-import Foundation
 import SwiftData
 import Testing
 @testable import uniks
@@ -14,9 +13,8 @@ struct HabitEventServiceTests {
 
     @Test func logInsertsEventWithPendingState() async throws {
         let container = try ModelContainer.uniksContainer(inMemory: true)
-        let engine = MockLLMEngine(result: HabitParseResult(category: "fitness", value: 5, unit: "km"))
-        let parser = ParsingActor(container: container, engine: engine)
-        let fts = try FTSService()
+        let parser = MockParsingActor()
+        let fts = MockFTSService()
         let service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
 
         let eventID = try await service.log(rawInput: "Ran 5km")
@@ -27,13 +25,13 @@ struct HabitEventServiceTests {
 
         #expect(event.rawInput == "Ran 5km")
         #expect(event.state == .pending)
+        #expect(await parser.parsedEventIDs.contains(eventID))
     }
 
     @Test func logIndexesRawInputForSearch() async throws {
         let container = try ModelContainer.uniksContainer(inMemory: true)
-        let engine = MockLLMEngine(result: HabitParseResult())
-        let parser = ParsingActor(container: container, engine: engine)
-        let fts = try FTSService()
+        let parser = MockParsingActor()
+        let fts = MockFTSService()
         let service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
 
         let eventID = try await service.log(rawInput: "Drank 500ml water")
@@ -44,9 +42,8 @@ struct HabitEventServiceTests {
 
     @Test func deleteRemovesEventAndIndex() async throws {
         let container = try ModelContainer.uniksContainer(inMemory: true)
-        let engine = MockLLMEngine(result: HabitParseResult())
-        let parser = ParsingActor(container: container, engine: engine)
-        let fts = try FTSService()
+        let parser = MockParsingActor()
+        let fts = MockFTSService()
         let service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
 
         let eventID = try await service.log(rawInput: "Meditated")
@@ -58,5 +55,51 @@ struct HabitEventServiceTests {
 
         let results = try await fts.search(query: "Meditated")
         #expect(results.isEmpty)
+    }
+
+    @Test func deleteMissingEventIsSilent() async throws {
+        let container = try ModelContainer.uniksContainer(inMemory: true)
+        let parser = MockParsingActor()
+        let fts = MockFTSService()
+        let service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
+
+        let unknownID = UUID()
+        try await service.delete(eventID: unknownID)
+
+        #expect(await parser.parsedEventIDs.isEmpty)
+        #expect(await fts.indexedEventIDs.isEmpty)
+    }
+}
+
+// MARK: - Mocks
+
+private actor MockParsingActor: ParsingActorProtocol {
+    private(set) var parsedEventIDs: [UUID] = []
+
+    func parseAndSave(eventID: UUID) async {
+        parsedEventIDs.append(eventID)
+    }
+}
+
+private actor MockFTSService: FTSServiceProtocol {
+    private var index: [UUID: String] = [:]
+
+    var indexedEventIDs: [UUID] {
+        Array(index.keys)
+    }
+
+    func index(eventID: UUID, rawInput: String) async throws {
+        index[eventID] = rawInput
+    }
+
+    func remove(eventID: UUID) async throws {
+        index.removeValue(forKey: eventID)
+    }
+
+    func search(query: String) async throws -> [UUID] {
+        let lowercasedQuery = query.lowercased()
+        return index.compactMap { eventID, rawInput in
+            rawInput.lowercased().contains(lowercasedQuery) ? eventID : nil
+        }
     }
 }
