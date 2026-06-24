@@ -28,9 +28,9 @@ struct OllamaLLMEngineTests {
 
     @Test func parsesValidResponse() async throws {
         let url = try #require(URL(string: "http://localhost:11434/api/generate"))
-        let ollamaResponse = try #require("""
+        let ollamaResponse = Data("""
         {"response": "{\\"category\\": \\"fitness\\", \\"value\\": 5.0, \\"unit\\": \\"km\\"}"}
-        """.data(using: .utf8))
+        """.utf8)
         let response = try #require(HTTPURLResponse(
             url: url,
             statusCode: 200,
@@ -81,9 +81,9 @@ struct OllamaLLMEngineTests {
 
     @Test func throwsDecodingFailedForInvalidJSON() async throws {
         let url = try #require(URL(string: "http://localhost:11434/api/generate"))
-        let ollamaResponse = try #require("""
+        let ollamaResponse = Data("""
         {"response": "not valid json"}
-        """.data(using: .utf8))
+        """.utf8)
         let response = try #require(HTTPURLResponse(
             url: url,
             statusCode: 200,

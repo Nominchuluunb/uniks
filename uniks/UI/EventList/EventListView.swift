@@ -8,52 +8,391 @@
 import SwiftUI
 import SwiftData
 
+struct EventGroup: Identifiable {
+    let id = UUID()
+    let title: String
+    let events: [HabitEvent]
+}
+
 struct EventListView: View {
     @Query(sort: \HabitEvent.createdAt, order: .reverse) private var events: [HabitEvent]
 
     @State private var viewModel: EventListViewModel
+    
+    // For macOS NavigationSplitView integration
+    var sidebarSelection: SidebarSelection?
+    var selectedEventBinding: Binding<HabitEvent?>?
 
-    init(viewModel: EventListViewModel) {
+    // For iOS internal sheet presentation
+    @State private var selectedEvent: HabitEvent?
+
+    init(
+        viewModel: EventListViewModel,
+        sidebarSelection: SidebarSelection? = nil,
+        selectedEventBinding: Binding<HabitEvent?>? = nil
+    ) {
         self.viewModel = viewModel
+        self.sidebarSelection = sidebarSelection
+        self.selectedEventBinding = selectedEventBinding
     }
 
     var body: some View {
         NavigationStack {
-            List(filteredEvents) { event in
-                EventRow(event: event)
+            Group {
+                if filteredEvents.isEmpty {
+                    UEmptyState(
+                        icon: Icons.emptyEvents,
+                        title: "No events yet",
+                        message: eventListHint
+                    )
+                } else {
+                    #if os(iOS)
+                    ScrollView {
+                        LazyVStack(spacing: .spacing(.medium)) {
+                            ForEach(filteredEvents) { event in
+                                EventRowCard(event: event)
+                                    .onTapGesture {
+                                        selectedEvent = event
+                                    }
+                                    .interactiveScale()
+                            }
+                        }
+                        .padding(.horizontal, .spacing(.medium))
+                        .padding(.vertical, .spacing(.medium))
+                    }
+                    .background(Color.groupedBackground)
+                    #else
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            ForEach(groupedEvents) { group in
+                                Text(group.title)
+                                    .font(.uCaption)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(Color.secondaryLabel)
+                                    .padding(.horizontal, .spacing(.medium))
+                                    .padding(.top, .spacing(.large))
+                                    .padding(.bottom, .spacing(.xxSmall))
+                                
+                                ForEach(group.events) { event in
+                                    TimelineRow(
+                                        event: event,
+                                        isSelected: selectedEventBinding?.wrappedValue == event
+                                    )
+                                    .onTapGesture {
+                                        if let selectedEventBinding {
+                                            selectedEventBinding.wrappedValue = event
+                                        } else {
+                                            selectedEvent = event
+                                        }
+                                    }
+                                    
+                                    Divider()
+                                        .padding(.leading, .spacing(.xxLarge))
+                                }
+                            }
+                        }
+                        .padding(.bottom, .spacing(.medium))
+                    }
+                    .background(Color.groupedBackground)
+                    #endif
+                }
             }
-            .navigationTitle("Events")
+            .navigationTitle(navigationTitle)
             .searchable(text: $viewModel.searchText, prompt: "Search logs")
             .onChange(of: viewModel.searchText) { _, _ in
                 viewModel.search()
             }
+            .sheet(item: $selectedEvent) { event in
+                EventEditView(
+                    event: event,
+                    service: viewModel.service,
+                    onFinished: { selectedEvent = nil }
+                )
+            }
         }
+    }
+
+    private var navigationTitle: String {
+        #if os(macOS)
+        if let sidebarSelection {
+            return sidebarSelection.displayName
+        }
+        #endif
+        return "Events"
     }
 
     private var filteredEvents: [HabitEvent] {
+        let baseEvents: [HabitEvent]
+        #if os(macOS)
+        if let sidebarSelection {
+            switch sidebarSelection {
+            case .all:
+                baseEvents = events
+            case .inbox:
+                baseEvents = events.filter { $0.state == .pending }
+            case .category(let categoryName):
+                baseEvents = events.filter { $0.parsedPayload()?.category?.lowercased() == categoryName.lowercased() }
+            case .saved(let filter):
+                baseEvents = events.filter { $0.matchesSavedFilter(filter) }
+            default:
+                baseEvents = events
+            }
+        } else {
+            baseEvents = events
+        }
+        #else
+        baseEvents = events
+        #endif
+
         if !viewModel.isSearchActive {
-            return events
+            return baseEvents
         }
         let resultIDs = Set(viewModel.searchResults)
-        return events.filter { resultIDs.contains($0.id) }
+        return baseEvents.filter { resultIDs.contains($0.id) }
+    }
+
+    private var groupedEvents: [EventGroup] {
+        let calendar = Calendar.current
+        var todayEvents: [HabitEvent] = []
+        var yesterdayEvents: [HabitEvent] = []
+        var earlierEvents: [HabitEvent] = []
+        
+        for event in filteredEvents {
+            if calendar.isDateInToday(event.createdAt) {
+                todayEvents.append(event)
+            } else if calendar.isDateInYesterday(event.createdAt) {
+                yesterdayEvents.append(event)
+            } else {
+                earlierEvents.append(event)
+            }
+        }
+        
+        var groups: [EventGroup] = []
+        if !todayEvents.isEmpty {
+            groups.append(EventGroup(title: "TODAY", events: todayEvents))
+        }
+        if !yesterdayEvents.isEmpty {
+            groups.append(EventGroup(title: "YESTERDAY", events: yesterdayEvents))
+        }
+        if !earlierEvents.isEmpty {
+            groups.append(EventGroup(title: "EARLIER THIS WEEK", events: earlierEvents))
+        }
+        return groups
+    }
+
+    private var eventListHint: String {
+        #if os(iOS)
+        "Tap + to log your first event."
+        #else
+        "Press Cmd + Shift + U or click + to log your first event."
+        #endif
     }
 }
 
-private struct EventRow: View {
+private struct EventRowCard: View {
     let event: HabitEvent
+    @State private var isHovered = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(event.rawInput)
-                .font(.body)
-            HStack {
-                StatusBadge(state: event.state)
-                Spacer()
+        HStack(alignment: .top, spacing: .spacing(.medium)) {
+            VStack(alignment: .leading, spacing: .spacing(.small)) {
+                Text(event.rawInput)
+                    .font(.system(.body, design: .rounded))
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.primaryLabel)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+
+                if event.state == .parsed, let payload = event.parsedPayload() {
+                    ParsedMetadataView(payload: payload)
+                } else if event.state == .pending {
+                    HStack(spacing: .spacing(.xxSmall)) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("AI Parsing…")
+                            .font(.uCaption)
+                            .foregroundStyle(Color.secondaryLabel)
+                    }
+                }
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: .spacing(.small)) {
+                UBadge(state: event.state)
+                
                 Text(event.createdAt, style: .time)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.uNumeric)
+                    .foregroundStyle(Color.secondaryLabel)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.spacing(.medium))
+        .background(
+            RoundedRectangle(cornerRadius: .radius(.medium))
+                .fill(Color.secondaryGroupedBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: .radius(.medium))
+                .stroke(
+                    isHovered ? Color.accentColor.opacity(0.4) : Color.separator.opacity(0.3),
+                    lineWidth: isHovered ? 1.0 : 0.5
+                )
+        )
+        .shadow(
+            color: Color.black.opacity(isHovered ? 0.08 : 0.02),
+            radius: isHovered ? 6 : 2,
+            x: 0,
+            y: isHovered ? 3 : 1
+        )
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
+private struct ParsedMetadataView: View {
+    let payload: HabitParseResult
+
+    var body: some View {
+        UFlowLayout {
+            if let category = payload.category {
+                UChip(text: category, style: .category)
+            }
+
+            if payload.value != nil || payload.unit != nil {
+                UChip(text: valueText, style: .value)
+            }
+
+            if let tags = payload.tags, !tags.isEmpty {
+                ForEach(tags, id: \.self) { tag in
+                    UChip(text: tag, style: .tag)
+                }
+            }
+
+            if let notes = payload.notes, !notes.isEmpty {
+                Text(notes)
+                    .font(.uCaption)
+                    .foregroundStyle(Color.secondaryLabel)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private var valueText: String {
+        let value = payload.value.map { String($0) } ?? ""
+        let unit = payload.unit ?? ""
+        switch (!value.isEmpty, !unit.isEmpty) {
+        case (true, true): return "\(value) \(unit)"
+        case (true, false): return value
+        case (false, true): return unit
+        case (false, false): return ""
+        }
+    }
+}
+
+#Preview {
+    do {
+        let container = try ModelContainer.uniksContainer(inMemory: true)
+        return EventListView(
+            viewModel: EventListViewModel(
+                service: HabitEventService(
+                    container: container,
+                    parsingActor: ParsingActor(
+                        container: container,
+                        engine: MockLLMEngine(result: HabitParseResult())
+                    ),
+                    ftsService: FTSService.inMemory()
+                ),
+                ftsService: FTSService.inMemory()
+            )
+        )
+    } catch {
+        return Text("Preview failed")
+    }
+}
+
+private struct TimelineRow: View {
+    let event: HabitEvent
+    let isSelected: Bool
+    @State private var isHovered = false
+
+    var body: some View {
+        let payload = event.parsedPayload()
+        let category = payload?.category
+        let categoryColor = Color.categoryColor(for: category)
+
+        HStack(spacing: 0) {
+            // Left category color vertical indicator bar
+            Rectangle()
+                .fill(categoryColor)
+                .frame(width: 4)
+
+            HStack(alignment: .top, spacing: .spacing(.small)) {
+                // Category icon
+                Image(systemName: Icons.categorySymbol(for: category))
+                    .font(.title3)
+                    .foregroundStyle(categoryColor)
+                    .frame(width: 24, height: 24)
+                    .padding(.top, 2)
+
+                // Content
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.rawInput)
+                        .font(.system(.body, design: .rounded))
+                        .fontWeight(.semibold)
+                        .lineLimit(2)
+                        .foregroundStyle(Color.primaryLabel)
+
+                    if event.state == .parsed, let payload {
+                        HStack(spacing: .spacing(.xSmall)) {
+                            if let val = payload.value {
+                                Text("\(val, format: .number) \(payload.unit ?? "")")
+                                    .font(.uCaption)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(categoryColor)
+                            }
+
+                            if let tags = payload.tags, !tags.isEmpty {
+                                ForEach(tags.prefix(3), id: \.self) { tag in
+                                    Text("#\(tag)")
+                                        .font(.uCaption2)
+                                        .foregroundStyle(Color.secondaryLabel)
+                                }
+                            }
+                        }
+                    } else if event.state == .pending {
+                        Text("AI parsing in progress...")
+                            .font(.uCaption)
+                            .foregroundStyle(Color.secondaryLabel)
+                            .italic()
+                    }
+                }
+
+                Spacer()
+
+                // Right aligned metadata
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(event.createdAt, style: .time)
+                        .font(.uNumeric)
+                        .foregroundStyle(Color.secondaryLabel)
+
+                    UBadge(state: event.state)
+                }
+            }
+            .padding(.horizontal, .spacing(.medium))
+            .padding(.vertical, .spacing(.small))
+        }
+        .background(
+            isSelected ? Color.accentColor.opacity(0.08) :
+            (isHovered ? Color.tertiaryGroupedBackground.opacity(0.5) : Color.clear)
+        )
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.12)) {
+                isHovered = hovering
+            }
+        }
     }
 }

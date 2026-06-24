@@ -19,6 +19,7 @@ struct UniksApp: App {
 
     #if os(macOS)
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    private let panelManager: QuickInputPanelManager
     #endif
 
     @MainActor
@@ -64,13 +65,23 @@ struct UniksApp: App {
             panelManager?.hide()
         }
         panelManager.install()
+        self.panelManager = panelManager
         self.appDelegate.panelManager = panelManager
         #endif
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView(ftsService: self.ftsService, service: self.service)
+            ContentView(
+                container: self.container,
+                ftsService: self.ftsService,
+                service: self.service,
+                showQuickInput: {
+                    #if os(macOS)
+                    self.panelManager.show()
+                    #endif
+                }
+            )
         }
         .modelContainer(self.container)
     }

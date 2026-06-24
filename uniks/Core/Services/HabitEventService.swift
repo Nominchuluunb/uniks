@@ -46,13 +46,52 @@ actor HabitEventService {
         return eventID
     }
 
+    /// Updates the parsed payload of an existing event and marks it as `.parsed`.
+    /// - Parameters:
+    ///   - eventID: The stable identifier of the event to update.
+    ///   - payload: The corrected structured payload.
+    func update(eventID: UUID, payload: HabitParseResult) async throws {
+        let context = ModelContext(self.container)
+        let eventIDValue = eventID
+        let descriptor = FetchDescriptor<HabitEvent>(
+            predicate: #Predicate { $0.id == eventIDValue }
+        )
+        guard let event = try context.fetch(descriptor).first else {
+            return
+        }
+        event.setParsedPayload(payload)
+        try context.save()
+    }
+
+    /// Re-queues an event for background parsing.
+    /// - Parameter eventID: The stable identifier of the event to retry.
+    func retryParsing(eventID: UUID) async throws {
+        let context = ModelContext(self.container)
+        let eventIDValue = eventID
+        let descriptor = FetchDescriptor<HabitEvent>(
+            predicate: #Predicate { $0.id == eventIDValue }
+        )
+        guard let event = try context.fetch(descriptor).first else {
+            return
+        }
+        event.state = .pending
+        try context.save()
+
+        Task {
+            await self.parsingActor.parseAndSave(eventID: eventID)
+        }
+    }
+
     /// Deletes an event from SwiftData and the FTS index.
     ///
     /// - Parameter eventID: The stable identifier of the event to delete.
     ///   If no event exists for this identifier, the method returns without throwing.
     func delete(eventID: UUID) async throws {
         let context = ModelContext(self.container)
-        let descriptor = FetchDescriptor<HabitEvent>(predicate: #Predicate { $0.id == eventID })
+        let eventIDValue = eventID
+        let descriptor = FetchDescriptor<HabitEvent>(
+            predicate: #Predicate { $0.id == eventIDValue }
+        )
         guard let event = try context.fetch(descriptor).first else {
             return
         }

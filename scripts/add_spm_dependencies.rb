@@ -7,12 +7,30 @@ PROJECT_PATH = 'uniks.xcodeproj'
 
 DEPENDENCIES = [
   {
-    name: 'mlx-swift-examples',
-    url: 'https://github.com/ml-explore/mlx-swift-examples.git',
+    name: 'mlx-swift-lm',
+    url: 'https://github.com/ml-explore/mlx-swift-lm.git',
     branch: 'main',
     products: {
-      'uniks' => ['MLXLMCommon'],
-      'uniksTests' => ['MLXLMCommon']
+      'uniks' => ['MLXLMCommon', 'MLXLLM', 'MLXHuggingFace'],
+      'uniksTests' => ['MLXLMCommon', 'MLXLLM', 'MLXHuggingFace']
+    }
+  },
+  {
+    name: 'swift-huggingface',
+    url: 'https://github.com/huggingface/swift-huggingface.git',
+    version: '0.9.0',
+    products: {
+      'uniks' => ['HuggingFace'],
+      'uniksTests' => ['HuggingFace']
+    }
+  },
+  {
+    name: 'swift-transformers',
+    url: 'https://github.com/huggingface/swift-transformers.git',
+    version: '1.3.3',
+    products: {
+      'uniks' => ['Tokenizers'],
+      'uniksTests' => ['Tokenizers']
     }
   },
   {
@@ -26,7 +44,39 @@ DEPENDENCIES = [
   }
 ]
 
+# Legacy package references that should be removed.
+REMOVE_PACKAGE_URLS = [
+  'https://github.com/ml-explore/mlx-swift-examples.git'
+]
+
 project = Xcodeproj::Project.open(PROJECT_PATH)
+
+# Remove legacy package references and their product dependencies.
+REMOVE_PACKAGE_URLS.each do |url|
+  package_ref = project.root_object.package_references.find { |ref| ref.repositoryURL == url }
+  next unless package_ref
+
+  # Find and remove product dependencies tied to this package reference.
+  project.targets.each do |target|
+    target.package_product_dependencies.each do |pd|
+      next unless pd.package == package_ref
+
+      # Remove the build file from the Frameworks build phase.
+      target.frameworks_build_phase.files.each do |build_file|
+        if build_file.product_ref == pd
+          build_file.remove_from_project
+          break
+        end
+      end
+
+      pd.remove_from_project
+      puts "Removed product dependency #{pd.product_name} from #{target.name}"
+    end
+  end
+
+  package_ref.remove_from_project
+  puts "Removed legacy package reference: #{url}"
+end
 
 DEPENDENCIES.each do |dep|
   # 1. Create or find remote package reference
@@ -34,10 +84,14 @@ DEPENDENCIES.each do |dep|
   unless package_ref
     package_ref = project.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageReference)
     package_ref.repositoryURL = dep[:url]
-    package_ref.requirement = {
-      'kind' => 'branch',
-      'branch' => dep[:branch]
-    }
+    package_ref.requirement =
+      if dep[:branch]
+        { 'kind' => 'branch', 'branch' => dep[:branch] }
+      elsif dep[:version]
+        { 'kind' => 'exactVersion', 'version' => dep[:version] }
+      else
+        { 'kind' => 'branch', 'branch' => 'main' }
+      end
     project.root_object.package_references << package_ref
     puts "Added package reference: #{dep[:name]}"
   end

@@ -55,7 +55,7 @@ actor FTSService: FTSServiceProtocol {
             self.databaseQueue = try FTSDatabaseQueue.makeInMemory()
         }
         self.indexer = try SearchIndexer(databaseQueue: self.databaseQueue)
-        self.engine = try SearchEngine(databaseQueue: self.databaseQueue)
+        self.engine = SearchEngine(databaseQueue: self.databaseQueue)
     }
 
     /// Creates an in-memory FTS service. Never fails; useful for previews and fallbacks.

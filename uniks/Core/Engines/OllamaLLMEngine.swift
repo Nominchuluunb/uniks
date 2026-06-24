@@ -86,7 +86,7 @@ actor OllamaLLMEngine: LocalLLMEngine {
                 throw OllamaLLMEngineError.decodingFailed
             }
             responseText = text
-        } catch is OllamaLLMEngineError {
+        } catch let error as OllamaLLMEngineError {
             throw error
         } catch {
             throw OllamaLLMEngineError.decodingFailed

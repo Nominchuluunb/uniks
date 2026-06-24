@@ -66,3 +66,40 @@ extension HabitEvent {
         return try? HabitParseResult.fromJSON(parsedPayloadJSON)
     }
 }
+
+/// Predefined smart query filters for the sidebar.
+enum SavedFilter: String, Hashable, CaseIterable, Sendable {
+    case prsThisYear = "PRs this year"
+    case civicServiceLog = "Civic — service log"
+    case longRuns = "Long runs > 10km"
+}
+
+extension HabitEvent {
+    /// Determines whether the event matches a specific smart filter.
+    func matchesSavedFilter(_ filter: SavedFilter) -> Bool {
+        let payload = self.parsedPayload()
+        let rawLower = self.rawInput.lowercased()
+        
+        switch filter {
+        case .prsThisYear:
+            let isThisYear = Calendar.current.isDate(self.createdAt, equalTo: Date(), toGranularity: .year)
+            let hasPR = rawLower.contains("pr") ||
+                (payload?.tags?.contains { $0.lowercased() == "pr" } ?? false)
+            return isThisYear && hasPR
+            
+        case .civicServiceLog:
+            let hasCivic = rawLower.contains("civic")
+            let hasService = rawLower.contains("service") ||
+                rawLower.contains("log") ||
+                (payload?.tags?.contains { $0.lowercased() == "service" } ?? false)
+            return hasCivic || hasService
+            
+        case .longRuns:
+            let isRun = rawLower.contains("run") ||
+                payload?.category?.lowercased() == "fitness" ||
+                (payload?.tags?.contains { $0.lowercased() == "run" } ?? false)
+            let isLong = (payload?.value ?? 0.0) >= 10.0
+            return isRun && isLong
+        }
+    }
+}

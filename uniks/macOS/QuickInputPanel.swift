@@ -19,8 +19,8 @@ import Carbon
 ///   not isolated to the main actor, but `uninstall()` accesses main-actor
 ///   state and calls Carbon APIs that must run on the main thread.
 @MainActor
-final class QuickInputPanelManager: ObservableObject {
-    private var panel: NSPanel?
+final class QuickInputPanelManager {
+    private var panel: QuickInputPanel?
     private let viewModel: QuickInputViewModel
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
@@ -37,6 +37,8 @@ final class QuickInputPanelManager: ObservableObject {
 
     /// Brings the QuickInput panel to the front and activates the app.
     func show() {
+        viewModel.text = ""
+        viewModel.errorMessage = nil
         self.panel?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -72,25 +74,47 @@ final class QuickInputPanelManager: ObservableObject {
 
     private func createPanel() {
         let contentView = QuickInputView(viewModel: self.viewModel)
-        let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 120),
-            styleMask: [.nonactivatingPanel, .titled, .closable, .resizable],
+            .background(.ultraThinMaterial)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Gradients.brand, lineWidth: 1.2)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        
+        let panel = QuickInputPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 140),
+            styleMask: [.nonactivatingPanel, .borderless, .resizable],
             backing: .buffered,
             defer: false
         )
-        panel.title = "Uniks"
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.center()
         panel.contentView = NSHostingView(rootView: contentView)
         panel.isReleasedWhenClosed = false
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
+        panel.hidesOnDeactivate = true
+        panel.isMovableByWindowBackground = true
+        
+        // Monitor Escape key to hide panel
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 { // ESC keycode
+                self?.hide()
+                // Do not propagate escape key to avoid system beep
+                return nil
+            }
+            return event
+        }
         self.panel = panel
     }
 
     private func registerGlobalHotkey() {
+
         // Default hotkey: Cmd+Shift+U
-        let modifierFlags: UInt32 = UInt32(cmdKey | shiftKey)
-        let keyCode: UInt32 = UInt32(kVK_ANSI_U)
+        let modifierFlags = UInt32(cmdKey | shiftKey)
+        let keyCode = UInt32(kVK_ANSI_U)
 
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
@@ -159,5 +183,12 @@ private extension String {
             result = (result << 8) + FourCharCode(char)
         }
         return result
+    }
+}
+
+@MainActor
+final class QuickInputPanel: NSPanel {
+    override var canBecomeKey: Bool {
+        true
     }
 }

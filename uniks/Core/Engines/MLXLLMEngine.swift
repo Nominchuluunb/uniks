@@ -6,7 +6,11 @@
 //
 
 import Foundation
+import HuggingFace
+import MLXHuggingFace
+import MLXLLM
 import MLXLMCommon
+import Tokenizers
 
 /// Errors specific to the on-device MLX engine.
 enum MLXLLMEngineError: Error, Sendable, Equatable {
@@ -34,25 +38,28 @@ actor MLXLLMEngine: LocalLLMEngine {
         #else
         // Load the model container on first use. In production this should be
         // cached and managed by a dedicated ModelManager actor.
-        let modelContainer = try await LLMModel.load(
+        let modelContainer = try await #huggingFaceLoadModelContainer(
             configuration: ModelConfiguration(id: modelID)
         )
-        let model = modelContainer.model
 
-        let messages: [[String: String]] = [
-            ["role": "system", "content": Self.extractionSystemPrompt],
-            ["role": "user", "content": rawInput]
-        ]
-
-        let prompt = try model.applyChatTemplate(messages: messages)
-        let stream = try await model.generate(
-            prompt: prompt,
-            maxTokens: 256
-        )
+        let stream = try await modelContainer.perform { context in
+            let userInput = UserInput(messages: [
+                ["role": "system", "content": Self.extractionSystemPrompt],
+                ["role": "user", "content": rawInput]
+            ])
+            let input = try await context.processor.prepare(input: userInput)
+            return try MLXLMCommon.generate(
+                input: input,
+                parameters: GenerateParameters(maxTokens: 256, temperature: 0.0),
+                context: context
+            )
+        }
 
         var output = ""
-        for try await token in stream {
-            output += token
+        for try await event in stream {
+            if case .chunk(let text) = event {
+                output += text
+            }
         }
 
         let cleaned = output

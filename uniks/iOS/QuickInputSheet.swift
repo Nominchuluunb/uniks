@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+#if os(iOS)
 struct QuickInputSheet: View {
     let viewModel: QuickInputViewModel
     @Environment(\.dismiss) private var dismiss
@@ -22,5 +23,8 @@ struct QuickInputSheet: View {
                     }
                 }
         }
+        .presentationDetents([.height(220), .medium])
+        .presentationDragIndicator(.visible)
     }
 }
+#endif

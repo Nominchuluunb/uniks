@@ -1,6 +1,6 @@
 # AI Rules for Uniks Contributors
 
-This document defines the coding standards and behavioral rules for AI agents and human contributors working on Uniks. Read [SOUL.md](SOUL.md) first.
+This document defines the coding standards and behavioral rules for AI agents and human contributors working on Uniks. Read [`SOUL.md`](SOUL.md) first, then [`AGENTS.md`](AGENTS.md) if you are an AI agent.
 
 ## 1. Privacy-First Development
 
@@ -30,30 +30,32 @@ This document defines the coding standards and behavioral rules for AI agents an
 
 ## 4. UI Rules
 
+- **Design system only.** All UI must use tokens and components in `uniks/UI/DesignSystem/` and `uniks/UI/Shared/`. See [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md).
 - **Optimistic execution:** Save the raw event as `.pending` instantly; parse asynchronously.
 - Keep UI transitions under **80 ms** for the input path.
-- Use native SF Symbols and dynamic colors.
+- Use native SF Symbols and dynamic colors via the design system.
 - Respect Apple HIG for visual density and scannability.
 - `@MainActor` is for UI state only.
 
 ## 5. AI Engine Rules
 
-- Default engine: `MLXLLMEngine` via `mlx-swift-examples`.
+- Default engine: `MLXLLMEngine` via `mlx-swift-lm`.
 - Fallback engine: `OllamaLLMEngine` for `http://localhost:11434`.
-- Simulator engine: `MockLLMEngine` returning deterministic JSON.
+- Simulator/test engine: `MockLLMEngine` returning deterministic JSON.
 - All engines conform to `LocalLLMEngine` protocol.
-- Model selection defaults to small quantized instruct models (e.g., Llama 3.2 3B 4-bit).
+- Model selection defaults to small quantized instruct models (e.g. Llama 3.2 3B 4-bit).
 
 ## 6. Testing Rules
 
-- Use **Apple Swift Testing** framework only. No XCTest.
+- Use **XCTest** framework.
 - Every actor and service must have unit tests with mocked dependencies.
 - Use in-memory SwiftData containers for tests.
 - Test state transitions, parsing results, and error paths.
+- See [`TESTING.md`](TESTING.md) for commands and current test files.
 
 ## 7. Code Quality Rules
 
-- Follow `.swiftlint.yml`.
+- Follow [`.swiftlint.yml`](.swiftlint.yml).
 - Prefer small, focused files and protocols.
 - Use `Sendable` and `nonisolated` correctly.
 - Document public APIs with Swift documentation comments.
@@ -75,10 +77,23 @@ The following are not allowed unless explicitly approved:
 - Third-party networking libraries (use `URLSession`).
 - Third-party databases for primary persistence (use SwiftData).
 - CloudKit without documented end-to-end encryption design.
+- Inline custom styling that bypasses the design system.
 
-## 10. When in Doubt
+## 10. Documentation is Code
 
-If a change conflicts with [SOUL.md](SOUL.md) or this document, open an issue and discuss it before writing code. Uniks is designed to be simple, private, and fast — guard those qualities above all.
+When you change code, update the docs that describe it:
+
+- Architecture changes → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- UI changes → [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)
+- Test changes → [`TESTING.md`](TESTING.md)
+- Build/ops changes → [`docs/OPERATIONS.md`](docs/OPERATIONS.md)
+- User-visible features → [`docs/CHANGELOG.md`](docs/CHANGELOG.md) and [`README.md`](README.md)
+- Contributor process → [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Agent workflow → [`AGENTS.md`](AGENTS.md)
+
+## 11. When in Doubt
+
+If a change conflicts with [`SOUL.md`](SOUL.md) or this document, open an issue and discuss it before writing code. Uniks is designed to be simple, private, and fast — guard those qualities above all.
 
 ---
 

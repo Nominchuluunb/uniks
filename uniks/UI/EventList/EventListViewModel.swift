@@ -19,43 +19,45 @@ final class EventListViewModel {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    let service: HabitEventService
     private let ftsService: any FTSServiceProtocol
-    private var searchTask: Task<Void, Never>?
+    private var searchTaskID: UInt = 0
 
-    init(ftsService: any FTSServiceProtocol) {
+    init(service: HabitEventService, ftsService: any FTSServiceProtocol) {
+        self.service = service
         self.ftsService = ftsService
     }
 
     func search() {
-        searchTask?.cancel()
+        searchTaskID += 1
+        let taskID = searchTaskID
 
-        let task = Task { [weak self] in
+        Task { [weak self] in
             guard let self else { return }
 
             let trimmed = self.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else {
-                guard self.searchTask === task else { return }
+                guard self.searchTaskID == taskID else { return }
                 self.searchResults = []
                 self.isSearching = false
                 return
             }
 
-            guard self.searchTask === task else { return }
+            guard self.searchTaskID == taskID else { return }
             self.isSearching = true
-            defer { if self.searchTask === task { self.isSearching = false } }
+            defer { if self.searchTaskID == taskID { self.isSearching = false } }
 
             do {
                 let results = try await self.ftsService.search(query: trimmed)
                 try Task.checkCancellation()
-                guard self.searchTask === task else { return }
+                guard self.searchTaskID == taskID else { return }
                 self.searchResults = results
             } catch is CancellationError {
                 // no-op
             } catch {
-                guard self.searchTask === task else { return }
+                guard self.searchTaskID == taskID else { return }
                 self.searchResults = []
             }
         }
-        searchTask = task
     }
 }

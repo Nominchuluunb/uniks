@@ -200,7 +200,7 @@ If parsing fails, the event remains saved with state `.failed` and the raw input
 | IDE | Xcode 16+ | Build, debug, profile. |
 | Language | Swift 6.0+ | Strict concurrency, modern SwiftData. |
 | Lint | SwiftLint | Enforce style and catch prohibited patterns. |
-| Testing | Swift Testing | Unit and integration tests; no XCTest. |
+| Testing | XCTest | Unit and integration tests. |
 | CI | GitHub Actions | Build + test on macOS and iOS Simulator for every PR. |
 | Distribution | TestFlight → App Store | Beta testing and public release. |
 | Docs | Markdown in repo | Specs, runbooks, architecture decisions. |
@@ -222,7 +222,7 @@ If parsing fails, the event remains saved with state `.failed` and the raw input
 - [ ] Implement `ModelContainer` factory with WAL mode enabled.
 - [ ] Add unit tests for model encode/decode and state transitions.
 - [ ] Finalize `LocalLLMEngine` protocol and `MockLLMEngine`.
-- [ ] Resolve and link SPM dependencies (`mlx-swift-examples`, `SwiftFTS`); remove no-op `#if canImport` guards once packages are linked.
+- [ ] Resolve and link SPM dependencies (`mlx-swift-lm`, `SwiftFTS`); remove no-op `#if canImport` guards once packages are linked.
 - [ ] Verify clean build passes on macOS and iOS Simulator with SwiftLint and strict concurrency checking enabled.
 
 ### Phase 1: Core Loop (Weeks 3–5)

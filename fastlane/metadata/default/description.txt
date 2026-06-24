@@ -1,0 +1,17 @@
+Uniks is a privacy-first personal tracker that turns everyday notes into structured insights.
+
+Type naturally — "Ran 5km in 28min" — and Uniks extracts category, value, unit, tags, and notes using on-device AI. No cloud required. No account. No telemetry.
+
+FEATURES
+• Global QuickInput HUD on macOS (Cmd + Shift + U)
+• Natural-language capture on iOS
+• Local AI parsing with MLX, Ollama, or deterministic mock engine
+• Searchable event history
+• Dashboard with category totals, trends, top tags, and daily activity
+• Manual editing and retry when AI misses the mark
+• Export your data anytime
+
+YOUR DATA STAYS YOURS
+Everything is stored locally on your device. The AI runs locally too, so your personal logs never leave your Mac or iPhone.
+
+Perfect for quantified-self enthusiasts, habit builders, and anyone who wants to track their life without giving their data away.

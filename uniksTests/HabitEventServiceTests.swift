@@ -5,13 +5,14 @@
 //  Unit tests for the habit event ingestion service.
 //
 
+import Foundation
 import SwiftData
-import Testing
+import XCTest
 @testable import uniks
 
-struct HabitEventServiceTests {
+final class HabitEventServiceTests: XCTestCase {
 
-    @Test func logInsertsEventWithPendingState() async throws {
+    func testLogInsertsEventWithPendingState() async throws {
         let container = try ModelContainer.uniksContainer(inMemory: true)
         let parser = MockParsingActor()
         let fts = MockFTSService()
@@ -22,15 +23,16 @@ struct HabitEventServiceTests {
 
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<HabitEvent>(predicate: #Predicate { $0.id == eventID })
-        let event = try #require(try context.fetch(descriptor).first)
+        let event = try XCTUnwrap(try context.fetch(descriptor).first)
 
-        #expect(event.rawInput == "Ran 5km")
-        #expect(event.state == .pending)
-        #expect(parsedID == eventID)
-        #expect(await parser.parsedEventIDs.contains(eventID))
+        let containsParsedID = await parser.parsedEventIDs.contains(eventID)
+        XCTAssertEqual(event.rawInput, "Ran 5km")
+        XCTAssertEqual(event.state, .pending)
+        XCTAssertEqual(parsedID, eventID)
+        XCTAssertTrue(containsParsedID)
     }
 
-    @Test func logIndexesRawInputForSearch() async throws {
+    func testLogIndexesRawInputForSearch() async throws {
         let container = try ModelContainer.uniksContainer(inMemory: true)
         let parser = MockParsingActor()
         let fts = MockFTSService()
@@ -39,10 +41,10 @@ struct HabitEventServiceTests {
         let eventID = try await service.log(rawInput: "Drank 500ml water")
         let results = try await fts.search(query: "water")
 
-        #expect(results.contains(eventID))
+        XCTAssertTrue(results.contains(eventID))
     }
 
-    @Test func deleteRemovesEventAndIndex() async throws {
+    func testDeleteRemovesEventAndIndex() async throws {
         let container = try ModelContainer.uniksContainer(inMemory: true)
         let parser = MockParsingActor()
         let fts = MockFTSService()
@@ -53,13 +55,13 @@ struct HabitEventServiceTests {
 
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<HabitEvent>(predicate: #Predicate { $0.id == eventID })
-        #expect(try context.fetch(descriptor).isEmpty)
+        XCTAssertTrue(try context.fetch(descriptor).isEmpty)
 
         let results = try await fts.search(query: "Meditated")
-        #expect(results.isEmpty)
+        XCTAssertTrue(results.isEmpty)
     }
 
-    @Test func deleteMissingEventIsSilent() async throws {
+    func testDeleteMissingEventIsSilent() async throws {
         let container = try ModelContainer.uniksContainer(inMemory: true)
         let parser = MockParsingActor()
         let fts = MockFTSService()
@@ -68,8 +70,60 @@ struct HabitEventServiceTests {
         let unknownID = UUID()
         try await service.delete(eventID: unknownID)
 
-        #expect(await parser.parsedEventIDs.isEmpty)
-        #expect(await fts.indexedEventIDs.isEmpty)
+        let parserIDs = await parser.parsedEventIDs
+        let ftsIDs = await fts.indexedEventIDs
+        XCTAssertTrue(parserIDs.isEmpty)
+        XCTAssertTrue(ftsIDs.isEmpty)
+    }
+
+    func testUpdateSetsParsedPayloadAndState() async throws {
+        let container = try ModelContainer.uniksContainer(inMemory: true)
+        let parser = MockParsingActor()
+        let fts = MockFTSService()
+        let service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
+
+        let eventID = try await service.log(rawInput: "Ran 5km")
+        let payload = HabitParseResult(category: "fitness", value: 5, unit: "km", tags: ["run"], notes: "")
+        try await service.update(eventID: eventID, payload: payload)
+
+        let context = ModelContext(container)
+        let eventIDValue = eventID
+        let descriptor = FetchDescriptor<HabitEvent>(
+            predicate: #Predicate { $0.id == eventIDValue }
+        )
+        let event = try XCTUnwrap(try context.fetch(descriptor).first)
+
+        XCTAssertEqual(event.state, .parsed)
+        XCTAssertEqual(event.parsedPayload()?.category, "fitness")
+        XCTAssertEqual(event.parsedPayload()?.value, 5)
+        XCTAssertEqual(event.parsedPayload()?.unit, "km")
+        XCTAssertEqual(event.parsedPayload()?.tags, ["run"])
+    }
+
+    func testRetryParsingSetsPendingAndTriggersParse() async throws {
+        let container = try ModelContainer.uniksContainer(inMemory: true)
+        let parser = MockParsingActor()
+        let fts = MockFTSService()
+        let service = HabitEventService(container: container, parsingActor: parser, ftsService: fts)
+
+        let eventID = try await service.log(rawInput: "Ran 5km")
+        try await service.update(eventID: eventID, payload: HabitParseResult())
+        let initialParsedIDs = await parser.parsedEventIDs
+        XCTAssertTrue(initialParsedIDs.contains(eventID))
+
+        try await service.retryParsing(eventID: eventID)
+
+        let context = ModelContext(container)
+        let eventIDValue = eventID
+        let descriptor = FetchDescriptor<HabitEvent>(
+            predicate: #Predicate { $0.id == eventIDValue }
+        )
+        let event = try XCTUnwrap(try context.fetch(descriptor).first)
+
+        XCTAssertEqual(event.state, .pending)
+        _ = await parser.waitForParse()
+        let retryParsedCount = await parser.parsedEventIDs.filter { $0 == eventID }.count
+        XCTAssertGreaterThanOrEqual(retryParsedCount, 2)
     }
 }
 

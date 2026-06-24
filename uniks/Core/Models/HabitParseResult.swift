@@ -46,6 +46,10 @@ extension HabitParseResult {
         guard let data = string.data(using: .utf8) else {
             throw HabitParseError.decodingFailed
         }
-        return try JSONDecoder().decode(HabitParseResult.self, from: data)
+        do {
+            return try JSONDecoder().decode(HabitParseResult.self, from: data)
+        } catch {
+            throw HabitParseError.decodingFailed
+        }
     }
 }

@@ -1,3 +1,5 @@
+> **Historical plan.** This document records the Phase 0 implementation plan as executed. For the current project state, see [`README.md`](../../../README.md), [`docs/INDEX.md`](../../../docs/INDEX.md), and [`docs/ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md).
+
 # Uniks Phase 0: Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
