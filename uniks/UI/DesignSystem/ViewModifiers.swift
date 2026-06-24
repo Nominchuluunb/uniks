@@ -15,7 +15,7 @@ struct CardStyle: ViewModifier {
             .padding(.spacing(.medium))
             .background(
                 RoundedRectangle(cornerRadius: .radius(.medium))
-                    .fill(colorScheme == .dark ? Color.black.opacity(0.15) : Color.white.opacity(0.85))
+                    .fill(colorScheme == .dark ? Color.cardBackgroundDark : Color.cardBackgroundLight)
             )
             .background(
                 RoundedRectangle(cornerRadius: .radius(.medium))
@@ -23,10 +23,10 @@ struct CardStyle: ViewModifier {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: .radius(.medium))
-                    .stroke(Color.separator.opacity(colorScheme == .dark ? 0.4 : 0.6), lineWidth: 0.5)
+                    .stroke(Color.separatorFaint, lineWidth: 0.5)
             )
             .shadow(
-                color: Color.black.opacity(colorScheme == .dark ? 0.25 : 0.04),
+                color: colorScheme == .dark ? Color.shadowHeavy : Color.shadowLight,
                 radius: colorScheme == .dark ? 12 : 8,
                 x: 0,
                 y: colorScheme == .dark ? 6 : 4
@@ -50,7 +50,8 @@ struct ChipStyle: ViewModifier {
             )
             .overlay(
                 Capsule()
-                    .stroke(foreground.opacity(0.12), lineWidth: 0.5)
+                    .stroke(foreground, lineWidth: 0.5)
+                    .opacity(0.12)
             )
     }
 }
@@ -70,6 +71,21 @@ struct InteractiveScale: ViewModifier {
     }
 }
 
+struct PremiumTextFieldModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.uBody)
+            .padding(.horizontal, .spacing(.small))
+            .padding(.vertical, .spacing(.xSmall))
+            .background(Color.tertiaryGroupedBackground)
+            .clipShape(RoundedRectangle(cornerRadius: .radius(.small)))
+            .overlay(
+                RoundedRectangle(cornerRadius: .radius(.small))
+                    .stroke(Color.separatorFaint, lineWidth: 0.5)
+            )
+    }
+}
+
 extension View {
     func cardStyle() -> some View {
         modifier(CardStyle())
@@ -81,5 +97,9 @@ extension View {
 
     func interactiveScale() -> some View {
         modifier(InteractiveScale())
+    }
+
+    func premiumTextFieldStyle() -> some View {
+        modifier(PremiumTextFieldModifier())
     }
 }

@@ -1,4 +1,4 @@
-# Spec: Two-Screen Onboarding Flow
+# Spec: Three-Screen Onboarding Flow
 
 **Date:** 2026-06-24  
 **Scope:** v1.0, Phase 3 polish  
@@ -10,21 +10,22 @@ Show a short, skippable onboarding flow on first launch so a new user understand
 
 ## Requirements
 
-1. **Two pages**
-   - **Page 1 — Capture:** Explain the QuickInput HUD.
+1. **Three pages**
+   - **Page 1 — Welcome:** Explain the QuickInput HUD and natural-language capture.
      - macOS: *“Press Cmd + Shift + U anywhere to log a thought.”*
      - iOS: *“Tap + to log a thought.”*
-   - **Page 2 — Privacy:** Explain that data stays on device and AI runs locally.
+   - **Page 2 — Setup:** Explain that on-device models are downloaded from Hugging Face for local NLP parsing.
+   - **Page 3 — Downloading:** Show download progress while `LocalModelManager.download(_:)` fetches the default model. Dismiss onboarding when the download completes.
 
 2. **First-launch only**
    - Track completion in `UserDefaults` under key `uniks.hasCompletedOnboarding`.
-   - Show onboarding as a full-screen cover if not completed.
-   - Mark complete when the user taps **Get Started**.
+   - Show onboarding as a full-screen cover on iOS and a sheet on macOS if not completed.
+   - Mark complete when the user finishes the download stage.
 
 3. **Visual design**
    - Use large SF Symbols, bold titles, short subtitles, and a primary CTA.
-   - Page indicator (dots) at the bottom.
-   - No custom assets or colors.
+   - Page indicator (capsule pills) at the top.
+   - Use the design-system `MeshBackground` and brand gradient.
 
 4. **No functional changes**
    - Does not change engine, persistence, or parsing logic.
@@ -32,8 +33,8 @@ Show a short, skippable onboarding flow on first launch so a new user understand
 ## Files to create/modify
 
 - Create: `uniks/UI/Onboarding/OnboardingView.swift`
+- Create: `uniks/UI/Onboarding/OnboardingSubviews.swift`
 - Modify: `uniks/ContentView.swift` — conditionally present onboarding.
-- Modify: `uniks/uniksApp.swift` — pass onboarding state/completion.
 
 ## Testing
 
@@ -41,6 +42,6 @@ Show a short, skippable onboarding flow on first launch so a new user understand
 - Manual verification:
   1. Delete app / reset `uniks.hasCompletedOnboarding` to `false`.
   2. Launch app → onboarding appears.
-  3. Swipe/click through both pages.
-  4. Tap **Get Started** → onboarding dismisses and main UI appears.
+  3. Click through all three pages.
+  4. Complete download → onboarding dismisses and main UI appears.
   5. Relaunch app → onboarding does not appear again.

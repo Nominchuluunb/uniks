@@ -61,7 +61,7 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 300)
             } content: {
                 switch selectedSidebarSelection {
-                case .all, .inbox, .category, .saved:
+                case .all, .inbox, .category:
                     EventListView(
                         viewModel: eventListViewModel,
                         sidebarSelection: selectedSidebarSelection,
@@ -79,13 +79,13 @@ struct ContentView: View {
                 case .settings:
                     List(selection: $selectedSettingsTab) {
                         NavigationLink(value: SettingsTab.preferences) {
-                            Label("Preferences", systemImage: "cpu")
+                            Label("Preferences", systemImage: Icons.engine)
                         }
                         NavigationLink(value: SettingsTab.models) {
-                            Label("Local Models", systemImage: "square.3.layers.3d")
+                            Label("Local Models", systemImage: Icons.model)
                         }
                         NavigationLink(value: SettingsTab.privacy) {
-                            Label("Privacy & About", systemImage: "lock.shield")
+                            Label("Privacy & About", systemImage: Icons.privacy)
                         }
                     }
                     .navigationTitle("Settings")
@@ -95,7 +95,7 @@ struct ContentView: View {
                 }
             } detail: {
                 switch selectedSidebarSelection {
-                case .all, .inbox, .category, .saved:
+                case .all, .inbox, .category:
                     InspectorView(event: selectedEvent, service: service)
                 case .dashboard:
                     DashboardView(viewModel: dashboardViewModel)

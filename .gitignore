@@ -14,6 +14,9 @@ xcuserdata/
 .build/
 .swiftpm/
 
+# Python virtual environment
+.venv/
+
 # Local LLM model caches (root-only; source directories such as uniks/Core/Models must remain tracked)
 /Models/
 *.safetensors

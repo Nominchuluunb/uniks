@@ -3,7 +3,7 @@
 ## Targets
 
 - **`uniks`** — SwiftUI app for macOS and iOS.
-- **`uniksTests`** — XCTest unit tests.
+- **`uniksTests`** — Swift Testing unit tests.
 
 ## High-level data flow
 
@@ -36,14 +36,14 @@ The ingestion path is optimistic: the raw event is saved and indexed immediately
 
 | Path | Responsibility |
 |------|----------------|
-| `uniks/ContentView.swift` | Root `TabView` (Events, Dashboard, Settings) and modal presentation. |
+| `uniks/ContentView.swift` | Root container. iOS uses a `TabView` (Events, Dashboard, Settings). macOS uses a `NavigationSplitView` with `SidebarView`, `EventListView`, and `InspectorView`. |
 | `uniks/UI/HUD/` | Quick-input HUD (shared `QuickInputView`, iOS sheet wrapper, macOS panel manager). |
 | `uniks/UI/EventList/` | Searchable event list, event row metadata, event edit sheet. |
 | `uniks/UI/Dashboard/` | Charts and aggregations from parsed events. |
-| `uniks/UI/Settings/` | Engine selection preferences dashboard, dictation setup, on-device model selector, and dynamic text/HUD preferences. Subviews are modularized into `SettingsControls.swift`. |
-| `uniks/UI/Onboarding/` | First-launch onboarding flow with welcome, legal, setup, and animated/actual local model downloading stages (`OnboardingView.swift`, `OnboardingSubviews.swift`). |
+| `uniks/UI/Settings/` | Engine selection preferences and local MLX model download status. |
+| `uniks/UI/Onboarding/` | First-launch onboarding flow with welcome, setup, and local model downloading stages (`OnboardingView.swift`, `OnboardingSubviews.swift`). |
 | `uniks/UI/DesignSystem/` | Tokens, typography, icons, and reusable view modifiers. |
-| `uniks/UI/Shared/` | Shared components (`UCard`, `UChip`, `UBadge`, `UEmptyState`, `UFlowLayout`). |
+| `uniks/UI/Shared/` | Shared components (`UCard`, `UChip`, `UBadge`, `UEmptyState`, `UFlowLayout`, `SidebarView`, `InspectorView`). |
 
 UI views are `@MainActor` where needed. View models are thin; persistence and parsing are delegated to actors/services.
 
@@ -108,6 +108,16 @@ All engines conform to `LocalLLMEngine` (`uniks/Core/Protocols/LocalLLMEngine.sw
 
 The first-launch onboarding flow (`OnboardingView`) is structured as a three-stage sequence:
 1. **Welcome Stage**: Explains the natural language expressiveness features and includes terms/privacy compliance.
-2. **Setup Stage**: Summarizes the Gemma on-device intelligence model download parameters.
-3. **Downloading Stage**: Triggers both a visual download progress simulation and initiates the actual HF model download via `LocalModelManager.download(_:)`.
+2. **Setup Stage**: Summarizes the on-device model download parameters.
+3. **Downloading Stage**: Triggers the actual Hugging Face model download via `LocalModelManager.download(_:)` and shows download progress.
 
+On-device models are downloaded from Hugging Face (`huggingface.co`) on first setup. No personal event data or parsing logs are sent to Hugging Face or any other remote service.
+
+## Dependencies
+
+In addition to Apple frameworks, Uniks links the following Swift packages:
+
+- `mlx-swift-lm` — on-device MLX inference (`MLXLMCommon`, `MLXLLM`, `MLXHuggingFace`).
+- `swift-huggingface` — Hugging Face Hub integration (`HuggingFace`).
+- `swift-transformers` — tokenizers (`Tokenizers`).
+- `SwiftFTS` — SQLite FTS5 full-text search.

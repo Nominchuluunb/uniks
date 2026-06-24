@@ -7,6 +7,19 @@ All notable changes to Uniks are documented in this file.
 ### Added
 
 - **Micro-interactions & Animations** — Added `.interactiveScale()` springy press gestures, macOS card hover states, and breathing variable-color animations on `UBadge` during AI parsing.
+
+### Fixed / Cleanup
+
+- Fixed iOS Simulator build by platform-guarding `QuickInputPanel.swift` and `MeshBackground`.
+- Removed placeholder Settings sections (dictation hotkey, microphone, instant transcript, etc.).
+- Removed deterministic "AI Confidence" score from `InspectorView`.
+- Removed personal `SavedFilter` hardcoding from the macOS sidebar.
+- Replaced `SidebarView` polling timer with `UserDefaults` change observation.
+- Converted `EngineResolver` from an actor to a value type.
+- Migrated remaining `XCTest` files to Swift Testing.
+- Added Hugging Face model-download disclosure to onboarding, Settings, and docs.
+- Moved `.premiumTextFieldStyle()` into the design system.
+- **Design-system cleanup** — removed all remaining inline `.system(size:)` fonts, raw SF Symbol strings, and literal colors from views; centralized them in `DesignTokens.swift`, `Typography.swift`, and `Icons.swift`.
 - **Dynamic Chip Icons** — `UChip` now renders contextual icons (`folder`, `number`, `tag`) automatically to improve scannability of parsed logs.
 - **Spotlight-Style HUD** — macOS floating panel is now fully borderless, transparent, glassmorphic (using `.ultraThinMaterial`), hides on click-away, and closes on pressing `Escape`.
 

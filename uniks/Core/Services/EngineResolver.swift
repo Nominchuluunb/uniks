@@ -11,7 +11,7 @@
 /// - If user prefers MLX, use MLX on device; on simulator fall back to Ollama, then Mock.
 /// - If user prefers Ollama, try Ollama; fall back to Mock if initialization fails.
 /// - If user prefers Mock, use Mock.
-actor EngineResolver {
+struct EngineResolver {
     private let preference: EnginePreference
     private let mlxFactory: @Sendable () -> any LocalLLMEngine
     private let ollamaFactory: @Sendable () -> (any LocalLLMEngine)?
@@ -51,7 +51,7 @@ actor EngineResolver {
     }
 
     /// Returns the best available engine for the current runtime.
-    func resolve() async -> any LocalLLMEngine {
+    nonisolated func resolve() async -> any LocalLLMEngine {
         Self.preferredEngine(
             for: preference,
             mlxFactory: mlxFactory,

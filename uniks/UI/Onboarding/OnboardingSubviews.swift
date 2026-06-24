@@ -10,25 +10,25 @@ import SwiftUI
 struct MeshBackground: View {
     var body: some View {
         ZStack {
-            Color(nsColor: .windowBackgroundColor)
-            
+            Color.groupedBackground
+
             // Soft blue glow
             Circle()
-                .fill(Color.blue.opacity(0.12))
+                .fill(Color.brandBlueGlowStrong)
                 .frame(width: 500, height: 500)
                 .offset(x: 150, y: -200)
                 .blur(radius: 80)
-            
+
             // Soft purple glow
             Circle()
-                .fill(Color.purple.opacity(0.1))
+                .fill(Color.brandPurpleGlowMedium)
                 .frame(width: 600, height: 600)
                 .offset(x: -200, y: 150)
                 .blur(radius: 90)
-            
+
             // Soft red/pink glow
             Circle()
-                .fill(Color.red.opacity(0.08))
+                .fill(Color.brandRedGlowSoft)
                 .frame(width: 450, height: 450)
                 .offset(x: 250, y: 200)
                 .blur(radius: 80)
@@ -40,21 +40,15 @@ struct MeshBackground: View {
 struct UniksLogoHeader: View {
     var body: some View {
         HStack(spacing: .spacing(.small)) {
-            Image(systemName: "sparkles")
-                .font(.title2)
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .purple, .orange],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-            
+            Image(systemName: Icons.sparkles)
+                .font(.uBrandTitle2)
+                .foregroundStyle(Gradients.logo)
+
             Text("Uniks")
-                .font(.system(.body, design: .rounded).weight(.bold))
+                .font(.uBrandBodyBold)
                 .foregroundStyle(Color.primaryLabel) +
             Text(" Offline Intelligence")
-                .font(.system(.body, design: .rounded).weight(.medium))
+                .font(.uBrandBodyMedium)
                 .foregroundStyle(Color.secondaryLabel)
         }
     }
@@ -76,8 +70,9 @@ struct WelcomeStage: View {
         """
         
     private let stableText = """
-        To continue, Uniks will start downloading the necessary models \
-        for on-device processing. Please ensure you have a stable internet connection.
+        To continue, Uniks will download the necessary models from Hugging Face \
+        for on-device processing. Please ensure you have a stable internet connection. \
+        No personal data is sent to Hugging Face or any other service.
         """
 
     var body: some View {
@@ -85,36 +80,30 @@ struct WelcomeStage: View {
             // Hero Title
             VStack(alignment: .leading, spacing: 4) {
                 Text("Speak naturally,")
-                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .font(.uHero)
                     .foregroundStyle(Color.primaryLabel)
-                
+
                 Text("express effectively,")
-                    .font(.system(size: 38, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, Color(red: 0.6, green: 0.4, blue: 0.9)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                
+                    .font(.uHero)
+                    .foregroundStyle(Gradients.hero)
+
                 Text("no cap.")
-                    .font(.system(size: 38, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.purple.opacity(0.5))
+                    .font(.uHero)
+                    .foregroundStyle(Color.brandPurpleMuted)
             }
             .padding(.horizontal, .spacing(.large))
             
             // Subtitle Offline Box
             HStack(spacing: .spacing(.medium)) {
-                Image(systemName: "sparkle")
-                    .font(.title2)
-                    .foregroundStyle(Color.blue)
+                Image(systemName: Icons.sparkle)
+                    .font(.uBrandTitle2)
+                    .foregroundStyle(Color.brandBlue)
                     .padding(.spacing(.small))
-                    .background(Color.blue.opacity(0.08), in: Circle())
-                
+                    .background(Color.brandBlueGlowSoft, in: Circle())
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Fully local, on-device processing")
-                        .font(.system(.body, design: .rounded).weight(.bold))
+                        .font(.uBrandBodyBold)
                     Text("Offline Intelligence powered by Gemma.")
                         .font(.uCallout)
                         .foregroundStyle(Color.secondaryLabel)
@@ -122,10 +111,10 @@ struct WelcomeStage: View {
             }
             .padding(.spacing(.medium))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.blue.opacity(0.04))
+            .background(Color.brandBlueBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.blue.opacity(0.12), lineWidth: 1.0)
+                    .stroke(Color.brandBlueBorder, lineWidth: 1.0)
             )
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal, .spacing(.large))
@@ -137,11 +126,11 @@ struct WelcomeStage: View {
                     Text(metricsText)
                     Text(stableText)
                 }
-                .font(.system(size: 10, design: .rounded))
-                .foregroundStyle(Color.secondaryLabel.opacity(0.85))
+                .font(.uMicro)
+                .foregroundStyle(Color.secondaryLabelMuted)
                 .padding(.spacing(.medium))
-                .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.6)))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separator.opacity(0.2), lineWidth: 0.5))
+                .background(RoundedRectangle(cornerRadius: 16).fill(Color.glassBackground))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separatorVeryFaint, lineWidth: 0.5))
                 
                 Spacer()
                 
@@ -153,11 +142,11 @@ struct WelcomeStage: View {
                 } label: {
                     Text("Get Started")
                         .font(.uHeadline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.onAccent)
                         .padding(.horizontal, .spacing(.xxLarge))
                         .padding(.vertical, .spacing(.medium))
-                        .background(Color.blue, in: Capsule())
-                        .shadow(color: Color.blue.opacity(0.3), radius: 6, x: 0, y: 3)
+                        .background(Color.brandBlue, in: Capsule())
+                        .shadow(color: Color.brandBlueShadow, radius: 6, x: 0, y: 3)
                 }
                 .buttonStyle(.plain)
                 .interactiveScale()
@@ -176,71 +165,72 @@ struct SetupStage: View {
             // Left Specs Column
             VStack(alignment: .leading, spacing: .spacing(.medium)) {
                 Text("Enable private,")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.uHeroSmall)
                     .foregroundStyle(Color.primaryLabel)
                 Text("offline AI powered")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.uHeroSmall)
                     .foregroundStyle(Color.primaryLabel)
                 Text("features")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.uHeroSmall)
                     .foregroundStyle(Color.primaryLabel)
                 
                 Text(
-                    "Download the required Gemma models. By running entirely on your " +
-                    "device, these smart yet highly efficient models power everything " +
-                    "from dictation to complex text edits while guaranteeing your privacy. " +
-                    "There is no cost or cap for using the features enabled by these models."
+                    "Download the required Gemma models from Hugging Face. By running " +
+                    "entirely on your device, these smart yet highly efficient models power " +
+                    "parsing while guaranteeing your privacy. No personal data is sent to " +
+                    "Hugging Face. There is no cost or cap for using the features enabled by " +
+                    "these models."
                 )
                 .font(.uCallout)
                 .foregroundStyle(Color.secondaryLabel)
                 .lineSpacing(3)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             // Right Gemma Details Card
             VStack(alignment: .trailing, spacing: .spacing(.large)) {
                 VStack(alignment: .leading, spacing: .spacing(.medium)) {
                     // Gemma Logo Header
                     VStack(alignment: .center, spacing: .spacing(.xSmall)) {
-                        Image(systemName: "sparkles")
-                            .font(.largeTitle)
-                            .foregroundStyle(Color.blue)
-                        
+                        Image(systemName: Icons.sparkles)
+                            .font(.uTitle)
+                            .foregroundStyle(Color.brandBlue)
+
                         Text("Gemma")
-                            .font(.system(.title, design: .rounded).weight(.bold))
-                            .foregroundStyle(Color.blue)
+                            .font(.uBrandTitle)
+                            .foregroundStyle(Color.brandBlue)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, .spacing(.medium))
-                    .background(Color.blue.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
-                    
+                    .background(Color.brandBlueBackground, in: RoundedRectangle(cornerRadius: 12))
+
                     Text("What is Gemma?")
                         .font(.uHeadline)
                         .foregroundStyle(Color.primaryLabel)
-                    
+
                     Text(
                         "Gemma is a family of lightweight, state-of-the-art open models " +
                         "built from the same research and technology used to create the " +
                         "Gemini models. These models are sized and fine-tuned to run " +
                         "efficiently on your laptop."
                     )
-                    .font(.system(size: 11, design: .rounded))
+                    .font(.uCaption2)
                     .foregroundStyle(Color.secondaryLabel)
                     .lineSpacing(2)
                 }
                 .padding(.spacing(.large))
-                .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separator.opacity(0.3), lineWidth: 0.5))
-                .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
-                
+                .background(RoundedRectangle(cornerRadius: 16).fill(Color.elevatedBackground))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separatorFaint, lineWidth: 0.5))
+                .shadow(color: Color.shadowSubtle, radius: 8, x: 0, y: 4)
+
                 Button(action: onDownload) {
                     Text("Download")
                         .font(.uHeadline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.onAccent)
                         .padding(.horizontal, .spacing(.xxLarge))
                         .padding(.vertical, .spacing(.small))
-                        .background(Color.blue, in: Capsule())
-                        .shadow(color: Color.blue.opacity(0.2), radius: 4, x: 0, y: 2)
+                        .background(Color.brandBlue, in: Capsule())
+                        .shadow(color: Color.brandBlueShadowSoft, radius: 4, x: 0, y: 2)
                 }
                 .buttonStyle(.plain)
                 .interactiveScale()
@@ -260,83 +250,82 @@ struct ProgressStage: View {
             // Left Specs Column (same as Stage 2)
             VStack(alignment: .leading, spacing: .spacing(.medium)) {
                 Text("Enable private,")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.uHeroSmall)
                     .foregroundStyle(Color.primaryLabel)
                 Text("offline AI powered")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.uHeroSmall)
                     .foregroundStyle(Color.primaryLabel)
                 Text("features")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.uHeroSmall)
                     .foregroundStyle(Color.primaryLabel)
                 
                 Text(
-                    "Download the required Gemma models. By running entirely on your " +
-                    "device, these smart yet highly efficient models power everything " +
-                    "from dictation to complex text edits while guaranteeing your privacy. " +
-                    "There is no cost or cap for using the features enabled by these models."
+                    "Downloading the required Gemma models from Hugging Face. By running " +
+                    "entirely on your device, these models power parsing while guaranteeing " +
+                    "your privacy. No personal data is sent to Hugging Face."
                 )
                 .font(.uCallout)
                 .foregroundStyle(Color.secondaryLabel)
                 .lineSpacing(3)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             // Right Download Progress Card
             VStack(alignment: .trailing, spacing: .spacing(.large)) {
                 VStack(alignment: .leading, spacing: .spacing(.medium)) {
                     // Gemma Logo Header
                     VStack(alignment: .center, spacing: .spacing(.xSmall)) {
-                        Image(systemName: "sparkles")
-                            .font(.largeTitle)
-                            .foregroundStyle(Color.blue)
-                        
+                        Image(systemName: Icons.sparkles)
+                            .font(.uTitle)
+                            .foregroundStyle(Color.brandBlue)
+
                         Text("Gemma")
-                            .font(.system(.title, design: .rounded).weight(.bold))
-                            .foregroundStyle(Color.blue)
+                            .font(.uBrandTitle)
+                            .foregroundStyle(Color.brandBlue)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, .spacing(.medium))
-                    .background(Color.blue.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
-                    
+                    .background(Color.brandBlueBackground, in: RoundedRectangle(cornerRadius: 12))
+
                     Text("Downloading models...")
                         .font(.uHeadline)
                         .foregroundStyle(Color.primaryLabel)
-                    
+
                     // Progress bar
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color.tertiaryGroupedBackground)
                                 .frame(width: geo.size.width)
-                            
+
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.blue)
+                                .fill(Color.brandBlue)
                                 .frame(width: geo.size.width * CGFloat(downloadProgress))
                         }
                     }
                     .frame(height: 8)
-                    
+
                     HStack {
                         Text("\(Int(downloadProgress * 100))%")
                             .font(.uNumeric)
                             .fontWeight(.bold)
-                            .foregroundStyle(Color.blue)
-                        
+                            .foregroundStyle(Color.brandBlue)
+
                         Spacer()
-                        
+
                         Text(downloadedMBText)
                             .font(.uCaption2)
                             .foregroundStyle(Color.secondaryLabel)
                     }
-                    
+
                     Text("Please keep the application open during the download process.")
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(Color.secondaryLabel.opacity(0.8))
+                        .font(.uMicro)
+                        .foregroundStyle(Color.secondaryLabelSubtle)
                 }
                 .padding(.spacing(.large))
-                .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separator.opacity(0.3), lineWidth: 0.5))
-                .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
+                .background(RoundedRectangle(cornerRadius: 16).fill(Color.elevatedBackground))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separatorFaint, lineWidth: 0.5))
+                .shadow(color: Color.shadowSubtle, radius: 8, x: 0, y: 4)
                 
                 Button {
                     // Disabled during download

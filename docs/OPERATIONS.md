@@ -13,7 +13,7 @@ xcodebuild -project uniks.xcodeproj -scheme uniks -destination 'platform=macOS' 
 ### iOS Simulator
 
 ```bash
-xcodebuild -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 16 Pro' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipMacroValidation
+xcodebuild -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipMacroValidation
 ```
 
 ## Test
@@ -29,7 +29,7 @@ xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=ma
 ### iOS Simulator
 
 ```bash
-xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 16 Pro' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipMacroValidation -enableCodeCoverage NO
+xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipMacroValidation -enableCodeCoverage NO
 ```
 
 ## Lint
@@ -48,10 +48,12 @@ swiftlint lint --config .swiftlint.yml --strict
 
 ## App icon generation
 
-Requires Python with Pillow in the project virtual environment:
+Requires Python with Pillow in a local virtual environment:
 
 ```bash
+python3 -m venv .venv
 source .venv/bin/activate
+pip install Pillow
 python3 scripts/generate_app_icon.py
 ```
 

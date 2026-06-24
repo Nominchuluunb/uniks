@@ -17,14 +17,8 @@ enum SettingsTab: Hashable {
 @MainActor
 struct SettingsView: View {
     var activeTab: SettingsTab?
-    
+
     @State private var preference: EnginePreference = .current()
-    @State private var dictationHotkey = "Right ⌘"
-    @State private var dictationMicrophone = "MacBook Pro Microphone"
-    @State private var onDeviceModel = "Gemma 4 12B Model"
-    @State private var directTextInsertion = true
-    @State private var instantTranscript = false
-    @State private var hideFloatingBar = false
     @State private var modelManager = LocalModelManager()
     @State private var statuses: [String: LocalModelStatus] = [:]
     @State private var errorMessage: String?
@@ -58,7 +52,7 @@ extension SettingsView {
                     }
                 } header: {
                     HStack(spacing: 6) {
-                        Image(systemName: "cpu")
+                        Image(systemName: Icons.engine)
                         Text("AI Engine Preference")
                     }
                 }
@@ -82,11 +76,14 @@ extension SettingsView {
                     }
                 } header: {
                     HStack(spacing: 6) {
-                        Image(systemName: "square.3.layers.3d")
+                        Image(systemName: Icons.model)
                         Text("Local MLX Models")
                     }
                 } footer: {
-                    Text("Quantized Llama & Phi models run entirely on-device for secure NLP processing.")
+                    Text(
+                        "Quantized Llama models run entirely on-device for secure NLP processing. " +
+                        "Models are downloaded from Hugging Face on first use."
+                    )
                 }
 
                 Section {
@@ -95,15 +92,15 @@ extension SettingsView {
                             "Uniks is built local-first. Your personal event history, habits, " +
                             "and AI parsing logs are processed and stored exclusively on your " +
                             "physical device. We collect zero telemetry, zero analytics, " +
-                            "and zero personal information."
+                            "and zero personal information. On-device models are downloaded from Hugging Face."
                         )
                         .font(.uFootnote)
                         .foregroundStyle(Color.secondaryLabel)
                         .lineSpacing(3)
-                        
+
                         Divider()
                             .padding(.vertical, .spacing(.xxSmall))
-                        
+
                         HStack {
                             Text("Version")
                             Spacer()
@@ -115,7 +112,7 @@ extension SettingsView {
                     .padding(.vertical, .spacing(.xxSmall))
                 } header: {
                     HStack(spacing: 6) {
-                        Image(systemName: "lock.shield")
+                        Image(systemName: Icons.privacy)
                         Text("Privacy & About")
                     }
                 }
@@ -132,109 +129,25 @@ extension SettingsView {
             VStack(spacing: .spacing(.large)) {
                 switch activeTab {
                 case .preferences, .none:
-                    VStack(alignment: .leading, spacing: .spacing(.large)) {
-                        // Section 1: AI Engine Preference
-                        UCard(title: "AI Engine Preference") {
-                            VStack(alignment: .leading, spacing: .spacing(.medium)) {
-                                Picker("Engine", selection: $preference) {
-                                    ForEach(EnginePreference.allCases, id: \.self) { engine in
-                                        Text(engine.displayName).tag(engine)
-                                    }
+                    UCard(title: "AI Engine Preference") {
+                        VStack(alignment: .leading, spacing: .spacing(.medium)) {
+                            Picker("Engine", selection: $preference) {
+                                ForEach(EnginePreference.allCases, id: \.self) { engine in
+                                    Text(engine.displayName).tag(engine)
                                 }
-                                .pickerStyle(.segmented)
-                                .labelsHidden()
-                                .onChange(of: preference) { _, newValue in
-                                    newValue.save()
-                                }
-                                
-                                Text("Configure which local NLP parser is active for event parsing.")
-                                    .font(.uCaption2)
-                                    .foregroundStyle(Color.secondaryLabel)
                             }
-                        }
-                        
-                        // Section 2: System Hotkeys
-                        UCard(title: "System Hotkeys") {
-                            VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
-                                Text("Customize keyboard shortcuts to trigger Uniks actions.")
-                                    .font(.uFootnote)
-                                    .foregroundStyle(Color.secondaryLabel)
-                                    .padding(.bottom, 4)
-                                
-                                SettingsDropdownPicker(
-                                    title: "Dictation Hotkey",
-                                    selection: $dictationHotkey,
-                                    options: ["Right ⌘", "Left ⌘", "Double ⌃"],
-                                    formatter: { $0 }
-                                )
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+                            .onChange(of: preference) { _, newValue in
+                                newValue.save()
                             }
-                        }
-                        
-                        // Section 3: Dictation Microphone
-                        UCard(title: "Dictation Microphone") {
-                            VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
-                                Text("Select the microphone to use for dictation.")
-                                    .font(.uFootnote)
-                                    .foregroundStyle(Color.secondaryLabel)
-                                    .padding(.bottom, 4)
-                                
-                                SettingsDropdownPicker(
-                                    title: "Microphone",
-                                    selection: $dictationMicrophone,
-                                    options: ["MacBook Pro Microphone", "Built-in Microphone", "External Mic"],
-                                    formatter: { $0 }
-                                )
-                            }
-                        }
-                        
-                        // Section 4: On-Device Model
-                        UCard(title: "On-Device Model") {
-                            VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
-                                Text("Select which Gemma model to use for text style transforms and voice editing.")
-                                    .font(.uFootnote)
-                                    .foregroundStyle(Color.secondaryLabel)
-                                    .padding(.bottom, 4)
-                                
-                                SettingsDropdownPicker(
-                                    title: "Model Type",
-                                    selection: $onDeviceModel,
-                                    options: ["Gemma 4 12B Model", "Llama 3.2 1B Instruct", "Llama 3.2 3B Instruct"],
-                                    formatter: { $0 }
-                                )
-                            }
-                        }
-                        
-                        // Section 5: Dynamic Text Actions
-                        UCard(title: "Text & HUD Preferences") {
-                            VStack(spacing: .spacing(.medium)) {
-                                SettingsToggleRow(
-                                    title: "Direct Text Insertion",
-                                    description: "When recording via the macOS floating panel, " +
-                                        "directly insert the polished text into the text field.",
-                                    isOn: $directTextInsertion
-                                )
-                                
-                                Divider()
-                                
-                                SettingsToggleRow(
-                                    title: "Instant Transcript (Skip polishing)",
-                                    description: "Skip text polishing and get instant transcript " +
-                                        "when recording via the macOS floating panel.",
-                                    isOn: $instantTranscript
-                                )
-                                
-                                Divider()
-                                
-                                SettingsToggleRow(
-                                    title: "Hide floating bar after action finishes",
-                                    description: "Automatically hide the macOS floating bar " +
-                                        "after each action finishes.",
-                                    isOn: $hideFloatingBar
-                                )
-                            }
+
+                            Text("Configure which local NLP parser is active for event parsing.")
+                                .font(.uCaption2)
+                                .foregroundStyle(Color.secondaryLabel)
                         }
                     }
-                    
+
                 case .models:
                     UCard(title: "Local MLX Models") {
                         VStack(alignment: .leading, spacing: .spacing(.small)) {
@@ -247,12 +160,12 @@ extension SettingsView {
                                         await download(model)
                                     }
                                 }
-                                
+
                                 if model != LocalModel.allModels.last {
                                     Divider()
                                 }
                             }
-                            
+
                             if let errorMessage {
                                 Text(errorMessage)
                                     .font(.uCaption)
@@ -260,7 +173,7 @@ extension SettingsView {
                             }
                         }
                     }
-                    
+
                 case .privacy:
                     UCard(title: "Privacy & About") {
                         VStack(alignment: .leading, spacing: .spacing(.medium)) {
@@ -268,14 +181,14 @@ extension SettingsView {
                                 "Uniks is built local-first. Your personal event history, habits, " +
                                 "and AI parsing logs are processed and stored exclusively on your " +
                                 "physical device. We collect zero telemetry, zero analytics, " +
-                                "and zero personal information."
+                                "and zero personal information. On-device models are downloaded from Hugging Face."
                             )
                             .font(.uCallout)
                             .foregroundStyle(Color.secondaryLabel)
                             .lineSpacing(3)
-                            
+
                             Divider()
-                            
+
                             HStack {
                                 Text("Version")
                                 Spacer()

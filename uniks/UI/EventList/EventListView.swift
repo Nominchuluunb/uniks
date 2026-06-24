@@ -132,8 +132,6 @@ struct EventListView: View {
                 baseEvents = events.filter { $0.state == .pending }
             case .category(let categoryName):
                 baseEvents = events.filter { $0.parsedPayload()?.category?.lowercased() == categoryName.lowercased() }
-            case .saved(let filter):
-                baseEvents = events.filter { $0.matchesSavedFilter(filter) }
             default:
                 baseEvents = events
             }
@@ -197,7 +195,7 @@ private struct EventRowCard: View {
         HStack(alignment: .top, spacing: .spacing(.medium)) {
             VStack(alignment: .leading, spacing: .spacing(.small)) {
                 Text(event.rawInput)
-                    .font(.system(.body, design: .rounded))
+                    .font(.uBody)
                     .fontWeight(.medium)
                     .foregroundStyle(Color.primaryLabel)
                     .multilineTextAlignment(.leading)
@@ -234,12 +232,12 @@ private struct EventRowCard: View {
         .overlay(
             RoundedRectangle(cornerRadius: .radius(.medium))
                 .stroke(
-                    isHovered ? Color.accentColor.opacity(0.4) : Color.separator.opacity(0.3),
+                    isHovered ? Color.accentMuted : Color.separatorFaint,
                     lineWidth: isHovered ? 1.0 : 0.5
                 )
         )
         .shadow(
-            color: Color.black.opacity(isHovered ? 0.08 : 0.02),
+            color: isHovered ? Color.shadowMedium : Color.shadowVerySubtle,
             radius: isHovered ? 6 : 2,
             x: 0,
             y: isHovered ? 3 : 1
@@ -332,7 +330,7 @@ private struct TimelineRow: View {
             HStack(alignment: .top, spacing: .spacing(.small)) {
                 // Category icon
                 Image(systemName: Icons.categorySymbol(for: category))
-                    .font(.title3)
+                    .font(.uBrandTitle2)
                     .foregroundStyle(categoryColor)
                     .frame(width: 24, height: 24)
                     .padding(.top, 2)
@@ -340,7 +338,7 @@ private struct TimelineRow: View {
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
                     Text(event.rawInput)
-                        .font(.system(.body, design: .rounded))
+                        .font(.uBody)
                         .fontWeight(.semibold)
                         .lineLimit(2)
                         .foregroundStyle(Color.primaryLabel)
@@ -385,8 +383,8 @@ private struct TimelineRow: View {
             .padding(.vertical, .spacing(.small))
         }
         .background(
-            isSelected ? Color.accentColor.opacity(0.08) :
-            (isHovered ? Color.tertiaryGroupedBackground.opacity(0.5) : Color.clear)
+            isSelected ? Color.accentSubtle :
+            (isHovered ? Color.tertiaryGroupedBackgroundFaint : Color.clear)
         )
         .contentShape(Rectangle())
         .onHover { hovering in

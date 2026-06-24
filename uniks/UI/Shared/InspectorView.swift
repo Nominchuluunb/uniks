@@ -25,13 +25,13 @@ struct InspectorView: View {
                         // Header
                         HStack {
                             Text("#\(event.id.uuidString.suffix(4).uppercased())")
-                                .font(.system(.title3, design: .monospaced))
+                                .font(.uMonospacedTitle)
                                 .fontWeight(.bold)
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(Color.accent)
                                 .padding(.horizontal, .spacing(.small))
                                 .padding(.vertical, .spacing(.xxSmall))
                                 .background(
-                                    Color.accentColor.opacity(0.1),
+                                    Color.accentSoft,
                                     in: RoundedRectangle(cornerRadius: .radius(.small))
                                 )
                             
@@ -48,8 +48,7 @@ struct InspectorView: View {
                         // Large Title
                         VStack(alignment: .leading, spacing: 4) {
                             Text(titleText(for: event))
-                                .font(.title)
-                                .fontWeight(.bold)
+                                .font(.uBrandTitle)
                                 .lineLimit(2)
                                 .minimumScaleFactor(0.8)
                             
@@ -76,41 +75,12 @@ struct InspectorView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(
                                     RoundedRectangle(cornerRadius: .radius(.medium))
-                                        .fill(Color.black.opacity(0.2))
+                                        .fill(Color.codeBackground)
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: .radius(.medium))
-                                        .stroke(Color.separator.opacity(0.3), lineWidth: 0.5)
+                                        .stroke(Color.separatorFaint, lineWidth: 0.5)
                                 )
-                        }
-                        
-                        // Confidence Level
-                        if event.state == .parsed {
-                            VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
-                                HStack {
-                                    Text("AI Confidence")
-                                        .font(.uCaption)
-                                        .foregroundStyle(Color.secondaryLabel)
-                                        .textCase(.uppercase)
-                                        .tracking(0.5)
-                                    
-                                    Spacer()
-                                    
-                                    Text("\(Int(confidenceScore(for: event) * 100))%")
-                                        .font(.uNumeric)
-                                        .fontWeight(.bold)
-                                        .foregroundStyle(confidenceColor(for: event))
-                                }
-                                
-                                GeometryReader { geo in
-                                    ZCornerBar(
-                                        value: confidenceScore(for: event),
-                                        color: confidenceColor(for: event),
-                                        width: geo.size.width
-                                    )
-                                }
-                                .frame(height: 8)
-                            }
                         }
                         
                         // Parsed Payload monospaced JSON block
@@ -123,7 +93,7 @@ struct InspectorView: View {
                             
                             ScrollView([.horizontal, .vertical]) {
                                 Text(formattedJSON(for: event))
-                                    .font(.system(.body, design: .monospaced))
+                                    .font(.uMonospacedBody)
                                     .foregroundStyle(Color.primaryLabel)
                                     .padding(.spacing(.medium))
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -131,10 +101,10 @@ struct InspectorView: View {
                             .frame(maxHeight: 180)
                             .background(
                                 RoundedRectangle(cornerRadius: .radius(.medium))
-                                    .fill(Color.black.opacity(0.3))
+                                    .fill(Color.codeBackgroundDark)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: .radius(.medium))
-                                            .stroke(Color.separator.opacity(0.3), lineWidth: 0.5)
+                                            .stroke(Color.separatorFaint, lineWidth: 0.5)
                                     )
                             )
                         }
@@ -158,7 +128,7 @@ struct InspectorView: View {
                                     )
                                     .overlay(
                                         RoundedRectangle(cornerRadius: .radius(.medium))
-                                            .stroke(Color.separator.opacity(0.3), lineWidth: 0.5)
+                                            .stroke(Color.separatorFaint, lineWidth: 0.5)
                                     )
                             }
                         }
@@ -172,14 +142,15 @@ struct InspectorView: View {
                                 isShowingEditSheet = true
                             } label: {
                                 HStack {
-                                    Image(systemName: "pencil")
+                                    Image(systemName: Icons.pencil)
                                     Text("Edit")
                                 }
-                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .font(.uBody)
+                                .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, .spacing(.small))
-                                .background(Color.accentColor.opacity(0.12), in: Capsule())
-                                .foregroundStyle(Color.accentColor)
+                                .background(Color.accentSoft, in: Capsule())
+                                .foregroundStyle(Color.accent)
                             }
                             .buttonStyle(.plain)
                             .interactiveScale()
@@ -200,10 +171,11 @@ struct InspectorView: View {
                                     }
                                     Text("Delete")
                                 }
-                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .font(.uBody)
+                                .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, .spacing(.small))
-                                .background(Color.negative.opacity(0.08), in: Capsule())
+                                .background(Color.negativeSubtle, in: Capsule())
                                 .foregroundStyle(Color.negative)
                             }
                             .buttonStyle(.plain)
@@ -215,7 +187,7 @@ struct InspectorView: View {
                 }
             } else {
                 UEmptyState(
-                    icon: "doc.text.magnifyingglass",
+                    icon: Icons.inspector,
                     title: "No Event Selected",
                     message: "Select an event from the timeline to view details, parsed payload, and metrics."
                 )
@@ -239,10 +211,10 @@ struct InspectorView: View {
         guard event.state == .parsed, let payload = event.parsedPayload() else {
             return event.rawInput
         }
-        
+
         let value = payload.value.map { String($0) } ?? ""
         let unit = payload.unit ?? ""
-        
+
         switch (!value.isEmpty, !unit.isEmpty) {
         case (true, true): return "\(value) \(unit)"
         case (true, false): return value
@@ -250,31 +222,7 @@ struct InspectorView: View {
         case (false, false): return payload.category ?? event.rawInput
         }
     }
-    
-    private func confidenceScore(for event: HabitEvent) -> Double {
-        guard event.state == .parsed else { return 0.0 }
-        let payload = event.parsedPayload()
-        let hash = abs(event.rawInput.hashValue)
-        
-        // Base confidence is computed based on how many fields are resolved
-        var base = 0.70
-        if payload?.category != nil { base += 0.08 }
-        if payload?.value != nil { base += 0.08 }
-        if payload?.unit != nil { base += 0.04 }
-        if payload?.tags != nil && !(payload?.tags?.isEmpty ?? true) { base += 0.05 }
-        
-        // Deterministic noise to make it feel natural
-        let noise = Double(hash % 6) / 100.0
-        return min(base + noise, 0.99)
-    }
-    
-    private func confidenceColor(for event: HabitEvent) -> Color {
-        let score = confidenceScore(for: event)
-        if score > 0.85 { return .positive }
-        if score > 0.70 { return .warning }
-        return .negative
-    }
-    
+
     private func formattedJSON(for event: HabitEvent) -> String {
         guard let payload = event.parsedPayload() else { return "{}" }
         let encoder = JSONEncoder()
@@ -296,25 +244,6 @@ struct InspectorView: View {
     }
 }
 
-// Custom progress bar view to avoid layout issues in SwiftData/Forms
-private struct ZCornerBar: View {
-    let value: Double
-    let color: Color
-    let width: CGFloat
-    
-    var body: some View {
-        ZStack(alignment: .leading) {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color.tertiaryGroupedBackground)
-                .frame(width: width)
-            
-            RoundedRectangle(cornerRadius: 4)
-                .fill(color)
-                .frame(width: width * CGFloat(value))
-        }
-    }
-}
-
 // Sparkline Chart View using Swift Charts
 private struct ChartView: View {
     let events: [HabitEvent]
@@ -331,13 +260,7 @@ private struct ChartView: View {
                     y: .value("Value", val)
                 )
                 .interpolationMethod(.catmullRom(alpha: 0.5))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [categoryColor.opacity(0.3), categoryColor.opacity(0.0)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .foregroundStyle(Gradients.area(for: categoryColor))
                 
                 LineMark(
                     x: .value("Log", index),

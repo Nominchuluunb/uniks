@@ -35,7 +35,7 @@ struct OnboardingView: View {
                             }
                         } label: {
                             HStack(spacing: 6) {
-                                Image(systemName: "chevron.left")
+                                Image(systemName: Icons.chevronLeft)
                                 Text("Back")
                             }
                             .font(.uCallout)
@@ -53,10 +53,10 @@ struct OnboardingView: View {
                         // Slide progress indicator
                         HStack(spacing: 4) {
                             Capsule()
-                                .fill(currentPage == 1 ? Color.accentColor : Color.secondaryLabel.opacity(0.2))
+                                .fill(currentPage == 1 ? Color.accent : Color.secondaryLabelFaint)
                                 .frame(width: currentPage == 1 ? 24 : 8, height: 6)
                             Capsule()
-                                .fill(currentPage == 2 ? Color.accentColor : Color.secondaryLabel.opacity(0.2))
+                                .fill(currentPage == 2 ? Color.accent : Color.secondaryLabelFaint)
                                 .frame(width: currentPage == 2 ? 24 : 8, height: 6)
                         }
                     }
@@ -108,30 +108,23 @@ struct OnboardingView: View {
     private func startDownloadProgress() {
         isDownloading = true
         downloadProgress = 0.0
-        
+
         // Start actual local model manager download in the background
         Task {
             if let model = LocalModel.allModels.first {
                 await modelManager.download(model)
             }
         }
-        
-        // Trigger simulated timer
-        Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { downloadTimer in
-            if !isDownloading {
-                downloadTimer.invalidate()
-                return
-            }
-            
-            if downloadProgress < 1.0 {
+
+        // Animate simulated progress using structured concurrency
+        Task {
+            while isDownloading && downloadProgress < 1.0 {
+                try? await Task.sleep(for: .milliseconds(80))
                 downloadProgress += 0.01
-            } else {
-                downloadTimer.invalidate()
-                isDownloading = false
-                // Finish onboarding
-                UserDefaults.standard.set(true, forKey: Self.completedKey)
-                isPresented = false
             }
+            isDownloading = false
+            UserDefaults.standard.set(true, forKey: Self.completedKey)
+            isPresented = false
         }
     }
 }

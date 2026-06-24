@@ -16,9 +16,9 @@ struct UEmptyState: View {
     var body: some View {
         VStack(spacing: .spacing(.medium)) {
             Image(systemName: icon)
-                .font(.system(size: 56, weight: .light))
+                .font(.uLargeIcon)
                 .foregroundStyle(Gradients.brand)
-                .shadow(color: Color.accentColor.opacity(0.2), radius: 10, x: 0, y: 4)
+                .shadow(color: Color.accentGlow, radius: 10, x: 0, y: 4)
                 .scaleEffect(animate ? 1.0 : 0.85)
                 .opacity(animate ? 1.0 : 0.0)
 

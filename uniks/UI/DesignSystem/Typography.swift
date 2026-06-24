@@ -17,9 +17,28 @@ enum Typography {
     static let caption = Font.system(.caption, design: .rounded).weight(.medium)
     static let caption2 = Font.system(.caption2, design: .rounded)
     static let numeric = Font.system(.caption, design: .rounded).monospacedDigit()
+    static let input = Font.system(.title3, design: .rounded)
 
     static let largeIcon: Font = .system(size: 48, weight: .regular)
     static let extraLargeIcon: Font = .system(size: 72, weight: .regular)
+
+    // MARK: - Marketing / Onboarding
+
+    static let hero = Font.system(size: 38, weight: .bold, design: .rounded)
+    static let heroSmall = Font.system(size: 32, weight: .bold, design: .rounded)
+    static let brandTitle = Font.system(.title, design: .rounded).weight(.bold)
+    static let brandTitle2 = Font.system(.title2, design: .rounded)
+    static let brandBodyBold = Font.system(.body, design: .rounded).weight(.bold)
+    static let brandBodyMedium = Font.system(.body, design: .rounded).weight(.medium)
+
+    // MARK: - Small / Monospaced
+
+    static let micro = Font.system(size: 10, design: .rounded)
+    static let microBold = Font.system(size: 10, design: .rounded).weight(.semibold)
+    static let tiny = Font.system(size: 9, design: .rounded)
+    static let monospacedTitle = Font.system(.title3, design: .monospaced)
+    static let monospacedBody = Font.system(.body, design: .monospaced)
+    static let monospacedCaption = Font.system(.caption, design: .monospaced)
 }
 
 extension Font {
@@ -31,6 +50,19 @@ extension Font {
     static let uCaption = Typography.caption
     static let uCaption2 = Typography.caption2
     static let uNumeric = Typography.numeric
+    static let uInput = Typography.input
     static let uLargeIcon = Typography.largeIcon
     static let uExtraLargeIcon = Typography.extraLargeIcon
+    static let uHero = Typography.hero
+    static let uHeroSmall = Typography.heroSmall
+    static let uBrandTitle = Typography.brandTitle
+    static let uBrandTitle2 = Typography.brandTitle2
+    static let uBrandBodyBold = Typography.brandBodyBold
+    static let uBrandBodyMedium = Typography.brandBodyMedium
+    static let uMicro = Typography.micro
+    static let uMicroBold = Typography.microBold
+    static let uTiny = Typography.tiny
+    static let uMonospacedTitle = Typography.monospacedTitle
+    static let uMonospacedBody = Typography.monospacedBody
+    static let uMonospacedCaption = Typography.monospacedCaption
 }

@@ -96,7 +96,7 @@ private struct CategoryTotalsCard: View {
                 .chartYAxis {
                     AxisMarks(position: .leading) { _ in
                         AxisValueLabel()
-                            .font(.system(.caption, design: .rounded).weight(.medium))
+                            .font(.uCaption)
                     }
                 }
                 .frame(height: max(100, CGFloat(totals.count) * 36))
@@ -120,13 +120,7 @@ private struct DailyValuesCard: View {
                         x: .value("Date", value.date, unit: .day),
                         y: .value("Value", value.total)
                     )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.accentColor.opacity(0.3), Color.accentColor.opacity(0.0)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+                    .foregroundStyle(Gradients.brandArea)
                     .interpolationMethod(.catmullRom(alpha: 0.5))
 
                     LineMark(
@@ -146,7 +140,7 @@ private struct DailyValuesCard: View {
                 .chartYAxis {
                     AxisMarks { _ in
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                            .foregroundStyle(Color.separator.opacity(0.4))
+                            .foregroundStyle(Color.separatorFaint)
                         AxisValueLabel()
                             .font(.uNumeric)
                     }
@@ -205,16 +199,16 @@ private struct DailyActivityCard: View {
                     .chartYAxis {
                         AxisMarks { _ in
                             AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                                .foregroundStyle(Color.separator.opacity(0.3))
+                                .foregroundStyle(Color.separator)
                             AxisValueLabel()
                                 .font(.uCaption2)
                         }
                     }
                     .frame(height: 100)
 
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.caption)
+                    HStack(spacing: .spacing(.xxSmall)) {
+                        Image(systemName: Icons.success)
+                            .font(.uCaption)
                             .foregroundStyle(Color.positive)
                         Text("\(activity.reduce(0) { $0 + $1.count }) total events logged")
                             .font(.uCaption)

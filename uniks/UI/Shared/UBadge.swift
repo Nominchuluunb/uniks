@@ -62,7 +62,7 @@ struct UBadge: View {
     private var foregroundColor: Color {
         switch state {
         case .pending:
-            return Color.accentColor
+            return Color.accent
         case .parsed:
             return Color.positive
         case .failed:
