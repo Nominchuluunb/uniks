@@ -22,8 +22,7 @@ struct UChip: View {
         HStack(spacing: .spacing(.xxxSmall)) {
             if let iconName {
                 Image(systemName: iconName)
-                    .font(.system(size: 9, weight: .bold))
-                    .opacity(0.8)
+                    .font(.uCaption2)
             }
             Text(text)
         }
@@ -46,9 +45,9 @@ struct UChip: View {
     private var backgroundColor: Color {
         switch style {
         case .category:
-            return Color.accent.opacity(0.08)
+            return Color.accentSubtle
         case .value:
-            return Color.positive.opacity(0.08)
+            return Color.positiveSubtle
         case .tag:
             return Color.tertiaryGroupedBackground
         case .neutral:

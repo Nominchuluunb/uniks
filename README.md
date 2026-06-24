@@ -18,7 +18,7 @@ Uniks instantly saves the raw event and, in the background, extracts structured 
 
 ## Core Values
 
-- **Privacy-First:** Zero outbound telemetry. Your data never leaves your device unless you explicitly enable encrypted CloudKit sync.
+- **Privacy-First:** Zero outbound telemetry. Your personal data never leaves your device. On-device models are downloaded from Hugging Face on first setup; no event data or parsing logs are sent anywhere.
 - **Local AI:** NLP parsing runs via Apple MLX Swift on-device, or via a localhost endpoint you control (Ollama / LM Studio).
 - **Ultra-Low Latency:** Input path targets < 80 ms response time.
 - **Open Source:** Fully auditable, community-driven, anti-SaaS.
@@ -48,7 +48,8 @@ Uniks instantly saves the raw event and, in the background, extracts structured 
 - **SwiftData** stores canonical events with a dynamic JSON payload column to avoid schema migrations.
 - **SwiftFTS** provides full-text search over raw input via SQLite FTS5.
 - **Swift Charts** powers the Dashboard visualizations.
-- **XCTest** is used for all unit tests.
+- **Swift Testing** is used for all unit tests.
+- On-device models are downloaded from Hugging Face via `mlx-swift-lm`, `swift-huggingface`, and `swift-transformers`/`Tokenizers`.
 
 For the full architecture doc, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -132,7 +133,7 @@ xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=ma
 Run the test suite on the iOS Simulator:
 
 ```bash
-xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 16 Pro' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipMacroValidation -enableCodeCoverage NO
+xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipMacroValidation -enableCodeCoverage NO
 ```
 
 > **Note:** MLX-related tests run only on Apple platforms (macOS, iOS Simulator, or physical device) and cannot run on Linux because `MLXLMCommon` requires Apple frameworks.

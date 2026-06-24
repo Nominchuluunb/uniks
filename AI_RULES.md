@@ -47,7 +47,7 @@ This document defines the coding standards and behavioral rules for AI agents an
 
 ## 6. Testing Rules
 
-- Use **XCTest** framework.
+- Use **Swift Testing** framework.
 - Every actor and service must have unit tests with mocked dependencies.
 - Use in-memory SwiftData containers for tests.
 - Test state transitions, parsing results, and error paths.

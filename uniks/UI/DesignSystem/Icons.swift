@@ -25,8 +25,18 @@ enum Icons {
     static let checkmark = "checkmark"
     static let bolt = "bolt.fill"
     static let gear = "gearshape.fill"
+    static let engine = "cpu"
+    static let model = "square.3.layers.3d"
+    static let privacy = "lock.shield"
+    static let sparkles = "sparkles"
+    static let sparkle = "sparkle"
+    static let chevronLeft = "chevron.left"
+    static let pencil = "pencil"
+    static let plus = "plus"
+    static let trayAndArrowDown = "tray.and.arrow.down.fill"
     static let trash = "trash"
     static let retry = "arrow.clockwise"
+    static let inspector = "doc.text.magnifyingglass"
 
     /// Returns the SF Symbol name for a given category name.
     static func categorySymbol(for categoryName: String?) -> String {

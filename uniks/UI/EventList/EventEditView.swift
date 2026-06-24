@@ -54,16 +54,16 @@ struct EventEditView: View {
 
                 Section("Parsed Fields") {
                     VStack(alignment: .leading, spacing: .spacing(.small)) {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                             Text("Category")
                                 .font(.uCaption2)
                                 .foregroundStyle(Color.secondaryLabel)
                             TextField("e.g. Running, Sleep", text: $category)
                                 .premiumTextFieldStyle()
                         }
-                        
+
                         HStack(spacing: .spacing(.medium)) {
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                                 Text("Value")
                                     .font(.uCaption2)
                                     .foregroundStyle(Color.secondaryLabel)
@@ -73,8 +73,8 @@ struct EventEditView: View {
                                     #endif
                                     .premiumTextFieldStyle()
                             }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
+
+                            VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                                 Text("Unit")
                                     .font(.uCaption2)
                                     .foregroundStyle(Color.secondaryLabel)
@@ -82,16 +82,16 @@ struct EventEditView: View {
                                     .premiumTextFieldStyle()
                             }
                         }
-                        
-                        VStack(alignment: .leading, spacing: 4) {
+
+                        VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                             Text("Tags")
                                 .font(.uCaption2)
                                 .foregroundStyle(Color.secondaryLabel)
                             TextField("Tags (comma separated)", text: $tags)
                                 .premiumTextFieldStyle()
                         }
-                        
-                        VStack(alignment: .leading, spacing: 4) {
+
+                        VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                             Text("Notes")
                                 .font(.uCaption2)
                                 .foregroundStyle(Color.secondaryLabel)
@@ -125,11 +125,12 @@ struct EventEditView: View {
                                 Image(systemName: Icons.retry)
                                 Text("Retry Parse")
                             }
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.uBody)
+                            .fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                             .padding(.spacing(.small))
-                            .background(Color.accentColor.opacity(0.1), in: Capsule())
-                            .foregroundStyle(Color.accentColor)
+                            .background(Color.accentSoft, in: Capsule())
+                            .foregroundStyle(Color.accent)
                         }
                         .buttonStyle(.plain)
                         .interactiveScale()
@@ -142,10 +143,11 @@ struct EventEditView: View {
                                 Image(systemName: Icons.trash)
                                 Text("Delete")
                             }
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.uBody)
+                            .fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                             .padding(.spacing(.small))
-                            .background(Color.negative.opacity(0.08), in: Capsule())
+                            .background(Color.negativeSubtle, in: Capsule())
                             .foregroundStyle(Color.negative)
                         }
                         .buttonStyle(.plain)
@@ -226,26 +228,5 @@ struct EventEditView: View {
         } catch {
             // Silent failure; the sheet stays open so the user can retry.
         }
-    }
-}
-
-struct PremiumTextFieldModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .font(.system(.body, design: .rounded))
-            .padding(.horizontal, .spacing(.small))
-            .padding(.vertical, .spacing(.xSmall))
-            .background(Color.tertiaryGroupedBackground)
-            .clipShape(RoundedRectangle(cornerRadius: .radius(.small)))
-            .overlay(
-                RoundedRectangle(cornerRadius: .radius(.small))
-                    .stroke(Color.separator.opacity(0.3), lineWidth: 0.5)
-            )
-    }
-}
-
-extension View {
-    func premiumTextFieldStyle() -> some View {
-        modifier(PremiumTextFieldModifier())
     }
 }

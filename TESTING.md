@@ -1,6 +1,6 @@
 ># Testing Guide for Uniks
 
-> Uniks uses **XCTest**. This guide explains how to run tests, mock dependencies, and test the local-first architecture.
+> Uniks uses **Swift Testing**. This guide explains how to run tests, mock dependencies, and test the local-first architecture.
 
 ## Testing Philosophy
 
@@ -26,7 +26,7 @@ xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=ma
 For iOS Simulator:
 
 ```bash
-xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 16 Pro' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipMacroValidation -enableCodeCoverage NO
+xcodebuild test -project uniks.xcodeproj -scheme uniks -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipMacroValidation -enableCodeCoverage NO
 ```
 
 `-enableCodeCoverage NO` is required because `yyjson` fails to link with profiling instrumentation.
@@ -53,7 +53,7 @@ uniksTests/
 ## Mocking the LLM Engine
 
 ```swift
-import XCTest
+import Testing
 @testable import uniks
 
 struct MockLLMEngine: LocalLLMEngine {
@@ -74,28 +74,35 @@ enum MockError: Error {
 ## Testing SwiftData State Transitions
 
 ```swift
-func testParsingActorTransitionsPendingToParsed() async throws {
-    let engine = MockLLMEngine(
-        result: HabitParseResult(
-            category: "fitness",
-            value: 5,
-            unit: "km",
-            tags: ["run"],
-            notes: nil
+import Testing
+import SwiftData
+@testable import uniks
+
+struct ParsingActorTests {
+
+    @Test func transitionsPendingToParsed() async throws {
+        let engine = MockLLMEngine(
+            result: HabitParseResult(
+                category: "fitness",
+                value: 5,
+                unit: "km",
+                tags: ["run"],
+                notes: nil
+            )
         )
-    )
-    let container = try ModelContainer.uniksContainer(inMemory: true)
-    let context = ModelContext(container)
-    let actor = ParsingActor(container: container, engine: engine)
+        let container = try ModelContainer.uniksContainer(inMemory: true)
+        let context = ModelContext(container)
+        let actor = ParsingActor(container: container, engine: engine)
 
-    let event = HabitEvent(rawInput: "Ran 5km")
-    context.insert(event)
-    try context.save()
+        let event = HabitEvent(rawInput: "Ran 5km")
+        context.insert(event)
+        try context.save()
 
-    await actor.parseAndSave(eventID: event.id)
+        await actor.parseAndSave(eventID: event.id)
 
-    XCTAssertEqual(event.state, .parsed)
-    XCTAssertNotNil(event.parsedPayloadJSON)
+        #expect(event.state == .parsed)
+        #expect(event.parsedPayloadJSON != nil)
+    }
 }
 ```
 

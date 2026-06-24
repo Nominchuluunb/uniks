@@ -5,6 +5,8 @@
 //  macOS floating panel and global hotkey for the QuickInput HUD.
 //
 
+#if os(macOS)
+
 import SwiftUI
 import AppKit
 import Carbon
@@ -192,3 +194,5 @@ final class QuickInputPanel: NSPanel {
         true
     }
 }
+
+#endif

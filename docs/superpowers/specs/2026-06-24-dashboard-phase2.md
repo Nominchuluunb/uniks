@@ -33,7 +33,7 @@ Add a **Dashboard** tab that turns logged events into at-a-glance insights: cate
 
 5. **Implementation approach**
    - Build a `DashboardViewModel` that queries SwiftData off the main thread and publishes aggregated results.
-   - Keep charts simple using SwiftUI shapes/rectangles; no external charting library.
+   - Use Apple's first-party **Swift Charts** framework for bar, line, and area charts.
    - Add unit tests for aggregation logic with an in-memory SwiftData container.
 
 ## Files to create/modify
