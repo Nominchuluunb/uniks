@@ -78,21 +78,28 @@ extension SettingsView {
 
     private var engineSection: some View {
         Section {
-            Picker("Engine", selection: $preference) {
-                ForEach(EnginePreference.allCases, id: \.self) { engine in
-                    Text(engine.displayName).tag(engine)
+            VStack(alignment: .leading, spacing: .spacing(.small)) {
+                Picker("Engine", selection: $preference) {
+                    ForEach(EnginePreference.allCases, id: \.self) { engine in
+                        Text(engine.displayName).tag(engine)
+                    }
                 }
-            }
-            .pickerStyle(.segmented)
-            .onChange(of: preference) { _, newValue in
-                newValue.save()
-            }
+                .pickerStyle(.segmented)
+                .onChange(of: preference) { _, newValue in
+                    newValue.save()
+                }
 
-            #if os(macOS)
-            Text("Configure which local NLP parser is active for event parsing.")
-                .font(.uCaption2)
-                .foregroundStyle(Color.secondaryLabel)
-            #endif
+                Text("Configure which local NLP parser is active for event parsing.")
+                    .font(.uCaption2)
+                    .foregroundStyle(Color.secondaryLabel)
+            }
+            .padding(.vertical, .spacing(.xSmall))
+            .listRowInsets(EdgeInsets(
+                top: .spacing(.xSmall),
+                leading: .spacing(.medium),
+                bottom: .spacing(.xSmall),
+                trailing: .spacing(.medium)
+            ))
         } header: {
             USectionHeader(icon: Icons.engine, title: "AI Engine Preference")
         }
@@ -116,9 +123,9 @@ extension SettingsView {
                 )
                 .listRowInsets(EdgeInsets(
                     top: .spacing(.xSmall),
-                    leading: .spacing(.xSmall),
+                    leading: .spacing(.medium),
                     bottom: .spacing(.xSmall),
-                    trailing: .spacing(.xSmall)
+                    trailing: .spacing(.medium)
                 ))
                 .listRowSeparator(.hidden)
             }
@@ -129,6 +136,9 @@ extension SettingsView {
                 "Gemma models run entirely on-device for private NLP parsing. " +
                 "Models are downloaded from Hugging Face on first use. No personal data is sent."
             )
+            .font(.uCaption2)
+            .foregroundStyle(Color.secondaryLabel)
+            .padding(.top, .spacing(.xSmall))
         }
     }
 
@@ -136,7 +146,7 @@ extension SettingsView {
 
     private var privacySection: some View {
         Section {
-            VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
+            VStack(alignment: .leading, spacing: .spacing(.small)) {
                 Text(
                     "Uniks is built local-first. Your personal event history, habits, " +
                     "and AI parsing logs are processed and stored exclusively on your " +
@@ -148,7 +158,6 @@ extension SettingsView {
                 .lineSpacing(3)
 
                 Divider()
-                    .padding(.vertical, .spacing(.xxSmall))
 
                 HStack {
                     Text("Version")
@@ -158,7 +167,13 @@ extension SettingsView {
                 }
                 .font(.uCaption)
             }
-            .padding(.vertical, .spacing(.xxSmall))
+            .padding(.vertical, .spacing(.xSmall))
+            .listRowInsets(EdgeInsets(
+                top: .spacing(.xSmall),
+                leading: .spacing(.medium),
+                bottom: .spacing(.xSmall),
+                trailing: .spacing(.medium)
+            ))
         } header: {
             USectionHeader(icon: Icons.privacy, title: "Privacy & About")
         }
