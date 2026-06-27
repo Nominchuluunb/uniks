@@ -56,6 +56,10 @@ struct DashboardView: View {
                         }
                         .padding(.horizontal, .spacing(.medium))
 
+                        // Weekly Heatmap
+                        WeeklyHeatmapCard(activity: viewModel.dailyActivity)
+                            .padding(.horizontal, .spacing(.medium))
+
                         // Insights
                         if !viewModel.insights.isEmpty {
                             VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
@@ -76,7 +80,8 @@ struct DashboardView: View {
                             .padding(.horizontal, .spacing(.medium))
                         }
 
-                        CategoryTotalsCard(totals: viewModel.categoryTotals)
+                        // Category sparklines
+                        CategorySparklineCard(totals: viewModel.categoryTotals, dailyValues: viewModel.dailyValues)
                             .padding(.horizontal, .spacing(.medium))
                         
                         DailyValuesCard(values: viewModel.dailyValues)
@@ -272,6 +277,142 @@ private struct DailyActivityCard: View {
                             .foregroundStyle(Color.secondaryLabel)
                     }
                 }
+            }
+        }
+    }
+}
+
+private struct WeeklyHeatmapCard: View {
+    let activity: [DailyActivity]
+
+    var body: some View {
+        UCard(title: "Activity Heatmap") {
+            if activity.isEmpty {
+                Text("No activity data")
+                    .font(.uCallout)
+                    .foregroundStyle(Color.secondaryLabel)
+            } else {
+                VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
+                    // Day labels
+                    HStack(spacing: .spacing(.xxxSmall)) {
+                        ForEach(activity.suffix(28), id: \.id) { day in
+                            Rectangle()
+                                .fill(heatColor(for: day.count))
+                                .frame(width: 12, height: 12)
+                                .clipShape(RoundedRectangle(cornerRadius: 2))
+                                .accessibilityLabel("\(day.count) events on \(day.date.formatted(.dateTime.month(.abbreviated).day()))")
+                        }
+                    }
+
+                    // Legend
+                    HStack(spacing: .spacing(.xSmall)) {
+                        Text("Less")
+                            .font(.uCaption2)
+                            .foregroundStyle(Color.secondaryLabel)
+                        ForEach(0..<5) { level in
+                            Rectangle()
+                                .fill(heatColor(for: level))
+                                .frame(width: 10, height: 10)
+                                .clipShape(RoundedRectangle(cornerRadius: 2))
+                        }
+                        Text("More")
+                            .font(.uCaption2)
+                            .foregroundStyle(Color.secondaryLabel)
+                    }
+                    .padding(.top, .spacing(.xxSmall))
+                }
+            }
+        }
+    }
+
+    private func heatColor(for count: Int) -> Color {
+        switch count {
+        case 0: return Color.tertiaryGroupedBackground
+        case 1: return Color.positive.opacity(0.25)
+        case 2: return Color.positive.opacity(0.5)
+        case 3: return Color.positive.opacity(0.75)
+        default: return Color.positive
+        }
+    }
+}
+
+private struct CategorySparklineCard: View {
+    let totals: [CategoryTotal]
+    let dailyValues: [DailyValue]
+
+    var body: some View {
+        UCard(title: "Category Breakdown") {
+            if totals.isEmpty {
+                Text("No category data")
+                    .font(.uCallout)
+                    .foregroundStyle(Color.secondaryLabel)
+            } else {
+                VStack(spacing: .spacing(.small)) {
+                    ForEach(totals.prefix(5)) { total in
+                        HStack(spacing: .spacing(.small)) {
+                            Circle()
+                                .fill(Color.categoryColor(for: total.category))
+                                .frame(width: 8, height: 8)
+                            Text(total.category)
+                                .font(.uCaption)
+                                .frame(width: 80, alignment: .leading)
+
+                            // Mini sparkline
+                            SparklineView(
+                                values: sparklineData(for: total),
+                                color: Color.categoryColor(for: total.category)
+                            )
+                            .frame(height: 20)
+
+                            Text(String(format: "%.0f", total.total))
+                                .font(.uNumeric)
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color.primaryLabel)
+                                .frame(width: 40, alignment: .trailing)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func sparklineData(for total: CategoryTotal) -> [Double] {
+        // Generate proportional sparkline from daily values
+        dailyValues.suffix(7).map { $0.total }
+    }
+}
+
+private struct SparklineView: View {
+    let values: [Double]
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geo in
+            if values.isEmpty || values.allSatisfy({ $0 == 0 }) {
+                Path { path in
+                    let y = geo.size.height / 2
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                }
+                .stroke(color.opacity(0.3), lineWidth: 1)
+            } else {
+                let maxVal = values.max() ?? 1
+                let minVal = values.min() ?? 0
+                let range = maxVal - minVal
+                let normalizedRange = range == 0 ? 1.0 : range
+
+                Path { path in
+                    for (index, value) in values.enumerated() {
+                        let x = geo.size.width * CGFloat(index) / CGFloat(max(values.count - 1, 1))
+                        let y = geo.size.height * (1 - CGFloat((value - minVal) / normalizedRange))
+                        if index == 0 {
+                            path.move(to: CGPoint(x: x, y: y))
+                        } else {
+                            path.addLine(to: CGPoint(x: x, y: y))
+                        }
+                    }
+                }
+                .stroke(color, lineWidth: 1.5)
             }
         }
     }

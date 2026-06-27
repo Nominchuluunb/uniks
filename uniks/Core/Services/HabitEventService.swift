@@ -100,4 +100,25 @@ actor HabitEventService {
 
         try await self.ftsService.remove(eventID: eventID)
     }
+
+    /// Returns the most recently used categories for smart suggestions.
+    /// - Parameter limit: Maximum number of categories to return.
+    func recentCategories(limit: Int = 5) async throws -> [String] {
+        let context = ModelContext(self.container)
+        let descriptor = FetchDescriptor<HabitEvent>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        let events = try context.fetch(descriptor)
+        var seen: Set<String> = []
+        var result: [String] = []
+        for event in events {
+            guard let category = event.parsedPayload()?.category,
+                  !category.isEmpty,
+                  !seen.contains(category) else { continue }
+            seen.insert(category)
+            result.append(category)
+            if result.count >= limit { break }
+        }
+        return result
+    }
 }

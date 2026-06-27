@@ -43,19 +43,40 @@ struct EventListView: View {
                     emptyStateView
                 } else {
                     #if os(iOS)
-                    ScrollView {
-                        LazyVStack(spacing: .spacing(.medium)) {
-                            ForEach(filteredEvents) { event in
-                                EventRowCard(event: event)
-                                    .onTapGesture {
-                                        selectedEvent = event
+                    List {
+                        ForEach(filteredEvents) { event in
+                            EventRowCard(event: event)
+                                .onTapGesture {
+                                    selectedEvent = event
+                                }
+                                .listRowInsets(EdgeInsets(
+                                    top: .spacing(.xSmall),
+                                    leading: .spacing(.medium),
+                                    bottom: .spacing(.xSmall),
+                                    trailing: .spacing(.medium)
+                                ))
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        Task { try? await viewModel.service.delete(eventID: event.id) }
+                                    } label: {
+                                        Label("Delete", systemImage: Icons.trash)
                                     }
-                                    .interactiveScale()
-                            }
+                                }
+                                .swipeActions(edge: .leading) {
+                                    if event.state == .failed {
+                                        Button {
+                                            Task { try? await viewModel.service.retryParsing(eventID: event.id) }
+                                        } label: {
+                                            Label("Retry", systemImage: Icons.retry)
+                                        }
+                                        .tint(Color.accent)
+                                    }
+                                }
                         }
-                        .padding(.horizontal, .spacing(.medium))
-                        .padding(.vertical, .spacing(.medium))
                     }
+                    .listStyle(.plain)
                     .background(Color.groupedBackground)
                     .refreshable {
                         await viewModel.refresh()

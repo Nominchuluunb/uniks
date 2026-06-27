@@ -174,10 +174,16 @@ extension Color {
     static let shadowHeavy = Color.black.opacity(0.25)
 
     /// Returns a specific color based on the category name for consistent visual styling.
+    /// Checks for user-customized colors first, falls back to built-in mapping.
     static func categoryColor(for categoryName: String?) -> Color {
         guard let name = categoryName?.lowercased()
             .trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else {
             return .secondaryLabel
+        }
+
+        // Check user-customized colors
+        if let customIndex = CategoryColorStore.colorIndex(for: name) {
+            return CategoryColorStore.palette[customIndex]
         }
 
         switch name {
@@ -198,6 +204,38 @@ extension Color {
             let index = abs(name.hashValue) % colors.count
             return colors[index]
         }
+    }
+}
+
+/// Persists user-customized category color choices.
+enum CategoryColorStore {
+    private static let key = "uniks.categoryColors"
+
+    /// Available palette for category customization.
+    static let palette: [Color] = [
+        .blue, .purple, .teal, .green, .orange, .pink, .indigo, .red, .yellow, .mint
+    ]
+
+    /// Returns the stored color palette index for a category, or nil for default.
+    static func colorIndex(for category: String) -> Int? {
+        guard let dict = UserDefaults.standard.dictionary(forKey: key) as? [String: Int] else {
+            return nil
+        }
+        return dict[category.lowercased()]
+    }
+
+    /// Sets a color palette index for a category.
+    static func setColor(index: Int, for category: String) {
+        var dict = (UserDefaults.standard.dictionary(forKey: key) as? [String: Int]) ?? [:]
+        dict[category.lowercased()] = index
+        UserDefaults.standard.set(dict, forKey: key)
+    }
+
+    /// Removes custom color for a category (reverts to default).
+    static func removeColor(for category: String) {
+        var dict = (UserDefaults.standard.dictionary(forKey: key) as? [String: Int]) ?? [:]
+        dict.removeValue(forKey: category.lowercased())
+        UserDefaults.standard.set(dict, forKey: key)
     }
 }
 

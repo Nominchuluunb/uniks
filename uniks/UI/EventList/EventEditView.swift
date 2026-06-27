@@ -2,7 +2,7 @@
 //  EventEditView.swift
 //  uniks
 //
-//  Sheet for correcting AI-parsed fields or retrying parsing.
+//  Sheet for correcting AI-parsed fields with rich live preview.
 //
 
 import SwiftUI
@@ -20,6 +20,7 @@ struct EventEditView: View {
     @State private var notes: String
     @State private var isSaving = false
     @State private var isDeleting = false
+    @State private var showDeleteConfirmation = false
 
     init(event: HabitEvent, service: HabitEventService, onFinished: @escaping () -> Void) {
         self.event = event
@@ -37,118 +38,108 @@ struct EventEditView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Raw input + status
                 Section {
-                    VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
-                        Text("Raw Input")
-                            .font(.uCaption)
+                    VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
+                        HStack {
+                            Text(event.rawInput)
+                                .font(.uBody)
+                                .fontWeight(.medium)
+                            Spacer()
+                            UBadge(state: event.state)
+                        }
+
+                        Text(event.createdAt, format: .dateTime.month(.abbreviated).day().hour().minute())
+                            .font(.uCaption2)
                             .foregroundStyle(Color.secondaryLabel)
-                            .textCase(.uppercase)
-                            .tracking(1.0)
-                        
-                        Text(event.rawInput)
-                            .font(.uBody)
-                            .foregroundStyle(Color.primaryLabel)
                     }
                     .padding(.vertical, .spacing(.xxSmall))
                 }
 
+                // Live preview
+                Section("Preview") {
+                    UFlowLayout {
+                        if !category.isEmpty {
+                            UChip(text: category, style: .category)
+                        }
+                        if !value.isEmpty {
+                            UChip(text: "\(value)\(unit.isEmpty ? "" : " \(unit)")", style: .value)
+                        }
+                        ForEach(parsedTags, id: \.self) { tag in
+                            UChip(text: tag, style: .tag)
+                        }
+                        if !notes.isEmpty {
+                            Text(notes)
+                                .font(.uCaption)
+                                .foregroundStyle(Color.secondaryLabel)
+                                .lineLimit(1)
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: category)
+                    .animation(.easeInOut(duration: 0.2), value: value)
+                    .animation(.easeInOut(duration: 0.2), value: tags)
+                }
+
+                // Fields
                 Section("Parsed Fields") {
                     VStack(alignment: .leading, spacing: .spacing(.small)) {
-                        VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
-                            Text("Category")
-                                .font(.uCaption2)
-                                .foregroundStyle(Color.secondaryLabel)
-                            TextField("e.g. Running, Sleep", text: $category)
-                                .premiumTextFieldStyle()
-                        }
+                        fieldRow(label: "Category", placeholder: "e.g. Running, Sleep", text: $category)
 
                         HStack(spacing: .spacing(.medium)) {
-                            VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
-                                Text("Value")
-                                    .font(.uCaption2)
-                                    .foregroundStyle(Color.secondaryLabel)
-                                TextField("e.g. 5, 8.5", text: $value)
-                                    #if os(iOS)
-                                    .keyboardType(.decimalPad)
-                                    #endif
-                                    .premiumTextFieldStyle()
-                            }
-
-                            VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
-                                Text("Unit")
-                                    .font(.uCaption2)
-                                    .foregroundStyle(Color.secondaryLabel)
-                                TextField("e.g. km, hrs", text: $unit)
-                                    .premiumTextFieldStyle()
-                            }
+                            fieldRow(label: "Value", placeholder: "e.g. 5", text: $value)
+                                #if os(iOS)
+                                .keyboardType(.decimalPad)
+                                #endif
+                            fieldRow(label: "Unit", placeholder: "e.g. km", text: $unit)
                         }
 
-                        VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
-                            Text("Tags")
-                                .font(.uCaption2)
-                                .foregroundStyle(Color.secondaryLabel)
-                            TextField("Tags (comma separated)", text: $tags)
-                                .premiumTextFieldStyle()
-                        }
-
-                        VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
-                            Text("Notes")
-                                .font(.uCaption2)
-                                .foregroundStyle(Color.secondaryLabel)
-                            TextField("Optional notes...", text: $notes, axis: .vertical)
-                                .premiumTextFieldStyle()
-                                .lineLimit(2...4)
-                        }
+                        fieldRow(label: "Tags", placeholder: "comma separated", text: $tags)
+                        fieldRow(label: "Notes", placeholder: "Optional notes...", text: $notes)
                     }
                     .padding(.vertical, .spacing(.xxSmall))
                 }
 
+                // Failed state hint
                 if event.state == .failed {
                     Section {
                         HStack(spacing: .spacing(.small)) {
                             Image(systemName: Icons.failure)
                                 .foregroundStyle(Color.negative)
-                            Text("AI Parsing failed. You can edit the fields manually or retry below.")
+                            Text("AI parsing failed. Edit manually or retry.")
                                 .font(.uCallout)
                                 .foregroundStyle(Color.secondaryLabel)
                         }
-                        .padding(.vertical, .spacing(.xxSmall))
                     }
                 }
 
+                // Actions
                 Section {
                     HStack(spacing: .spacing(.medium)) {
                         Button {
                             Task { await retryParsing() }
                         } label: {
-                            HStack {
-                                Image(systemName: Icons.retry)
-                                Text("Retry Parse")
-                            }
-                            .font(.uBody)
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding(.spacing(.small))
-                            .background(Color.accentSoft, in: Capsule())
-                            .foregroundStyle(Color.accent)
+                            Label("Retry Parse", systemImage: Icons.retry)
+                                .font(.uBody)
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding(.spacing(.small))
+                                .background(Color.accentSoft, in: Capsule())
+                                .foregroundStyle(Color.accent)
                         }
                         .buttonStyle(.plain)
                         .interactiveScale()
                         .disabled(event.state == .pending || isSaving || isDeleting)
 
                         Button {
-                            Task { await deleteEvent() }
+                            showDeleteConfirmation = true
                         } label: {
-                            HStack {
-                                Image(systemName: Icons.trash)
-                                Text("Delete")
-                            }
-                            .font(.uBody)
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding(.spacing(.small))
-                            .background(Color.negativeSubtle, in: Capsule())
-                            .foregroundStyle(Color.negative)
+                            Label("Delete", systemImage: Icons.trash)
+                                .font(.uBody)
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding(.spacing(.small))
+                                .background(Color.negativeSubtle, in: Capsule())
+                                .foregroundStyle(Color.negative)
                         }
                         .buttonStyle(.plain)
                         .interactiveScale()
@@ -164,69 +155,84 @@ struct EventEditView: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        onFinished()
-                    }
+                    Button("Cancel") { onFinished() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task { await save() }
                     }
+                    .fontWeight(.bold)
                     .disabled(isSaving || isDeleting)
                 }
             }
+            .confirmationDialog(
+                "Delete this event?",
+                isPresented: $showDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    Task { await deleteEvent() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This action cannot be undone. The event and its parsed data will be permanently removed.")
+            }
         }
     }
+
+    // MARK: - Helpers
+
+    private var parsedTags: [String] {
+        tags.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    private func fieldRow(label: String, placeholder: String, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
+            Text(label)
+                .font(.uCaption2)
+                .foregroundStyle(Color.secondaryLabel)
+            TextField(placeholder, text: text)
+                .premiumTextFieldStyle()
+        }
+    }
+
+    // MARK: - Actions
 
     private func save() async {
         isSaving = true
         defer { isSaving = false }
 
-        let trimmedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedUnit = unit.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        let tagList = tags
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
         let payload = HabitParseResult(
-            category: trimmedCategory.isEmpty ? nil : trimmedCategory,
+            category: category.isEmpty ? nil : category.trimmingCharacters(in: .whitespacesAndNewlines),
             value: Double(value.replacingOccurrences(of: ",", with: ".")),
-            unit: trimmedUnit.isEmpty ? nil : trimmedUnit,
-            tags: tagList.isEmpty ? nil : tagList,
-            notes: trimmedNotes.isEmpty ? nil : trimmedNotes
+            unit: unit.isEmpty ? nil : unit.trimmingCharacters(in: .whitespacesAndNewlines),
+            tags: parsedTags.isEmpty ? nil : parsedTags,
+            notes: notes.isEmpty ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines)
         )
 
         do {
             try await service.update(eventID: event.id, payload: payload)
             onFinished()
-        } catch {
-            // Silent failure; the sheet stays open so the user can retry.
-        }
+        } catch {}
     }
 
     private func retryParsing() async {
         isSaving = true
         defer { isSaving = false }
-
         do {
             try await service.retryParsing(eventID: event.id)
             onFinished()
-        } catch {
-            // Silent failure; the user can retry again.
-        }
+        } catch {}
     }
 
     private func deleteEvent() async {
         isDeleting = true
         defer { isDeleting = false }
-
         do {
             try await service.delete(eventID: event.id)
             onFinished()
-        } catch {
-            // Silent failure; the sheet stays open so the user can retry.
-        }
+        } catch {}
     }
 }

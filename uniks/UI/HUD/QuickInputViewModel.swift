@@ -7,6 +7,9 @@
 
 import Foundation
 import Observation
+#if os(iOS)
+import UIKit
+#endif
 
 /// Lightweight preview of the last parsed result for inline display.
 struct ParsedPreview: Sendable {
@@ -22,6 +25,8 @@ final class QuickInputViewModel {
     var isSaving: Bool = false
     var errorMessage: String?
     var lastParsedPreview: ParsedPreview?
+    var recentCategories: [String] = []
+    var templates: [QuickLogTemplate] = []
 
     var activeModelName: String {
         let modelID = ActiveModelPreference.effectiveModelID()
@@ -46,6 +51,8 @@ final class QuickInputViewModel {
     init(service: HabitEventService, onSaved: (@MainActor () -> Void)? = nil) {
         self.service = service
         self.onSaved = onSaved
+        templates = QuickLogTemplateStore.load()
+        Task { await loadRecentCategories() }
     }
 
     func submit() async {
@@ -60,9 +67,26 @@ final class QuickInputViewModel {
         do {
             _ = try await service.log(rawInput: trimmed)
             text = ""
+            #if os(iOS)
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+            #endif
             onSaved?()
         } catch {
+            #if os(iOS)
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
+            #endif
             errorMessage = "Could not save event."
+        }
+    }
+
+    private func loadRecentCategories() async {
+        do {
+            let categories = try await service.recentCategories(limit: 5)
+            recentCategories = categories
+        } catch {
+            recentCategories = []
         }
     }
 }

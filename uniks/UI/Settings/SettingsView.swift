@@ -42,6 +42,9 @@ extension SettingsView {
             Form {
                 engineSection
                 modelsSection
+                appearanceSection
+                dataExportSection
+                keyboardShortcutsSection
                 privacySection
             }
             .navigationTitle("Settings")
@@ -163,6 +166,80 @@ extension SettingsView {
             }
             .padding(.spacing(.medium))
             .background(Color.secondaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
+        }
+    }
+
+    // MARK: - Appearance Section
+
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: .spacing(.small)) {
+            USectionHeader(icon: "paintbrush", title: "Appearance")
+
+            VStack(alignment: .leading, spacing: .spacing(.small)) {
+                Picker("Theme", selection: .constant("system")) {
+                    Text("System").tag("system")
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
+
+                Text("Match your system appearance or choose a preferred theme.")
+                    .font(.uCaption2)
+                    .foregroundStyle(Color.secondaryLabel)
+            }
+            .padding(.spacing(.medium))
+            .background(Color.secondaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
+        }
+    }
+
+    // MARK: - Data Export Section
+
+    private var dataExportSection: some View {
+        VStack(alignment: .leading, spacing: .spacing(.small)) {
+            USectionHeader(icon: "square.and.arrow.up", title: "Data Export")
+
+            VStack(alignment: .leading, spacing: .spacing(.small)) {
+                Text("Export all your events as JSON for backup or analysis. Your data is yours.")
+                    .font(.uFootnote)
+                    .foregroundStyle(Color.secondaryLabel)
+
+                UButton("Export as JSON", style: .secondary) {
+                    // Export triggered
+                }
+            }
+            .padding(.spacing(.medium))
+            .background(Color.secondaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
+        }
+    }
+
+    // MARK: - Keyboard Shortcuts Section
+
+    private var keyboardShortcutsSection: some View {
+        VStack(alignment: .leading, spacing: .spacing(.small)) {
+            USectionHeader(icon: "keyboard", title: "Keyboard Shortcuts")
+
+            VStack(spacing: .spacing(.xSmall)) {
+                shortcutRow(keys: "⌘ ⇧ U", action: "Open Quick Input")
+                shortcutRow(keys: "⌘ K", action: "New Event (sidebar)")
+                shortcutRow(keys: "↵", action: "Save event")
+                shortcutRow(keys: "Esc", action: "Dismiss HUD")
+            }
+            .padding(.spacing(.medium))
+            .background(Color.secondaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
+        }
+    }
+
+    private func shortcutRow(keys: String, action: String) -> some View {
+        HStack {
+            Text(action)
+                .font(.uCallout)
+            Spacer()
+            Text(keys)
+                .font(.uMonospacedCaption)
+                .foregroundStyle(Color.secondaryLabel)
+                .padding(.horizontal, .spacing(.xSmall))
+                .padding(.vertical, .spacing(.xxxSmall))
+                .background(Color.tertiaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.small)))
         }
     }
 
