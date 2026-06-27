@@ -51,16 +51,20 @@ extension SettingsView {
 
     private var macOSBody: some View {
         NavigationStack {
-            Form {
-                switch activeTab {
-                case .preferences, .none:
-                    engineSection
-                case .models:
-                    modelsSection
-                case .privacy:
-                    privacySection
+            ScrollView {
+                VStack(alignment: .leading, spacing: .spacing(.large)) {
+                    switch activeTab {
+                    case .preferences, .none:
+                        engineSection
+                    case .models:
+                        modelsSection
+                    case .privacy:
+                        privacySection
+                    }
                 }
+                .padding(.spacing(.large))
             }
+            .background(Color.groupedBackground)
             .navigationTitle(navigationTitle)
         }
         .task { await refreshStatuses() }
@@ -77,7 +81,9 @@ extension SettingsView {
     // MARK: - Engine Section
 
     private var engineSection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: .spacing(.small)) {
+            USectionHeader(icon: Icons.engine, title: "AI Engine Preference")
+
             VStack(alignment: .leading, spacing: .spacing(.small)) {
                 Picker("Engine", selection: $preference) {
                     ForEach(EnginePreference.allCases, id: \.self) { engine in
@@ -93,22 +99,17 @@ extension SettingsView {
                     .font(.uCaption2)
                     .foregroundStyle(Color.secondaryLabel)
             }
-            .padding(.vertical, .spacing(.xSmall))
-            .listRowInsets(EdgeInsets(
-                top: .spacing(.xSmall),
-                leading: .spacing(.medium),
-                bottom: .spacing(.xSmall),
-                trailing: .spacing(.medium)
-            ))
-        } header: {
-            USectionHeader(icon: Icons.engine, title: "AI Engine Preference")
+            .padding(.spacing(.medium))
+            .background(Color.secondaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
         }
     }
 
     // MARK: - Models Section
 
     private var modelsSection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: .spacing(.small)) {
+            USectionHeader(icon: Icons.model, title: "Local Gemma Models")
+
             ForEach(LocalModel.allModels) { model in
                 UModelCard(
                     model: model,
@@ -121,31 +122,24 @@ extension SettingsView {
                     onRetry: { startDownload(model) },
                     onActivate: { activateModel(model) }
                 )
-                .listRowInsets(EdgeInsets(
-                    top: .spacing(.xSmall),
-                    leading: .spacing(.medium),
-                    bottom: .spacing(.xSmall),
-                    trailing: .spacing(.medium)
-                ))
-                .listRowSeparator(.hidden)
             }
-        } header: {
-            USectionHeader(icon: Icons.model, title: "Local Gemma Models")
-        } footer: {
+
             Text(
                 "Gemma models run entirely on-device for private NLP parsing. " +
                 "Models are downloaded from Hugging Face on first use. No personal data is sent."
             )
             .font(.uCaption2)
             .foregroundStyle(Color.secondaryLabel)
-            .padding(.top, .spacing(.xSmall))
+            .padding(.top, .spacing(.xxSmall))
         }
     }
 
     // MARK: - Privacy Section
 
     private var privacySection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: .spacing(.small)) {
+            USectionHeader(icon: Icons.privacy, title: "Privacy & About")
+
             VStack(alignment: .leading, spacing: .spacing(.small)) {
                 Text(
                     "Uniks is built local-first. Your personal event history, habits, " +
@@ -167,15 +161,8 @@ extension SettingsView {
                 }
                 .font(.uCaption)
             }
-            .padding(.vertical, .spacing(.xSmall))
-            .listRowInsets(EdgeInsets(
-                top: .spacing(.xSmall),
-                leading: .spacing(.medium),
-                bottom: .spacing(.xSmall),
-                trailing: .spacing(.medium)
-            ))
-        } header: {
-            USectionHeader(icon: Icons.privacy, title: "Privacy & About")
+            .padding(.spacing(.medium))
+            .background(Color.secondaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
         }
     }
 
