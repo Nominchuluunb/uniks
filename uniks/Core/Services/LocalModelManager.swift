@@ -100,16 +100,6 @@ actor LocalModelManager {
             self.activeTasks[model.id] = nil
         }
 
-        // Forward progress from downloader to our statuses
-        let statusTask = Task {
-            for await progress in stream {
-                if case .downloading = progress.phase {
-                    self.statuses[model.id] = .downloading(progress)
-                }
-            }
-        }
-        _ = statusTask
-
         activeTasks[model.id] = task
         return stream
     }

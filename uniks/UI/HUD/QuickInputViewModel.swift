@@ -58,20 +58,8 @@ final class QuickInputViewModel {
         defer { isSaving = false }
 
         do {
-            let event = try await service.log(rawInput: trimmed)
-            // Show inline preview if parsed data is available
-            if let payload = event.parsedPayloadJSON,
-               let data = payload.data(using: .utf8),
-               let result = try? JSONDecoder().decode(HabitParseResult.self, from: data) {
-                lastParsedPreview = ParsedPreview(
-                    category: result.category,
-                    value: result.value.map { String(format: "%g", $0) },
-                    unit: result.unit
-                )
-            }
+            _ = try await service.log(rawInput: trimmed)
             text = ""
-            // Delay dismiss to show preview briefly
-            try? await Task.sleep(for: .milliseconds(800))
             onSaved?()
         } catch {
             errorMessage = "Could not save event."

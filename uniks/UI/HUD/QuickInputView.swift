@@ -113,7 +113,7 @@ struct QuickInputView: View {
                         Text("Save")
                             .font(.uCaption)
                             .fontWeight(.bold)
-                            .foregroundStyle(Color.primaryLabel)
+                            .foregroundStyle(Color.onAccent)
                             .padding(.horizontal, .spacing(.medium))
                             .padding(.vertical, .spacing(.xxSmall))
                             .background(Gradients.brand, in: Capsule())
