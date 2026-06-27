@@ -46,7 +46,7 @@ struct InspectorView: View {
                         }
                         
                         // Large Title
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                             Text(titleText(for: event))
                                 .font(.uBrandTitle)
                                 .lineLimit(2)
@@ -273,6 +273,9 @@ private struct ChartView: View {
         }
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
+        .accessibilityLabel("\(category) history sparkline")
+        .accessibilityValue("Last \(events.count) logged values")
+        // swiftlint:disable:next hardcoded_frame_size
         .frame(height: 60)
     }
 }

@@ -15,6 +15,7 @@ struct MeshBackground: View {
             // Soft blue glow
             Circle()
                 .fill(Color.brandBlueGlowStrong)
+                // swiftlint:disable:next hardcoded_frame_size
                 .frame(width: 500, height: 500)
                 .offset(x: 150, y: -200)
                 .blur(radius: 80)
@@ -22,6 +23,7 @@ struct MeshBackground: View {
             // Soft purple glow
             Circle()
                 .fill(Color.brandPurpleGlowMedium)
+                // swiftlint:disable:next hardcoded_frame_size
                 .frame(width: 600, height: 600)
                 .offset(x: -200, y: 150)
                 .blur(radius: 90)
@@ -29,6 +31,7 @@ struct MeshBackground: View {
             // Soft red/pink glow
             Circle()
                 .fill(Color.brandRedGlowSoft)
+                // swiftlint:disable:next hardcoded_frame_size
                 .frame(width: 450, height: 450)
                 .offset(x: 250, y: 200)
                 .blur(radius: 80)
@@ -78,7 +81,7 @@ struct WelcomeStage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: .spacing(.large)) {
             // Hero Title
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                 Text("Speak naturally,")
                     .font(.uHero)
                     .foregroundStyle(Color.primaryLabel)
@@ -101,7 +104,7 @@ struct WelcomeStage: View {
                     .padding(.spacing(.small))
                     .background(Color.brandBlueGlowSoft, in: Circle())
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: .spacing(.xxxSmall)) {
                     Text("Fully local, on-device processing")
                         .font(.uBrandBodyBold)
                     Text("Offline Intelligence powered by Gemma.")
@@ -113,15 +116,15 @@ struct WelcomeStage: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.brandBlueBackground)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: .radius(.large))
                     .stroke(Color.brandBlueBorder, lineWidth: 1.0)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: .radius(.large)))
             .padding(.horizontal, .spacing(.large))
             
             // Terms Card & Bottom Button
             HStack(alignment: .bottom, spacing: .spacing(.large)) {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
                     Text(termsText)
                     Text(metricsText)
                     Text(stableText)
@@ -129,8 +132,14 @@ struct WelcomeStage: View {
                 .font(.uMicro)
                 .foregroundStyle(Color.secondaryLabelMuted)
                 .padding(.spacing(.medium))
-                .background(RoundedRectangle(cornerRadius: 16).fill(Color.glassBackground))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separatorVeryFaint, lineWidth: 0.5))
+                .background(
+                    RoundedRectangle(cornerRadius: .radius(.large))
+                        .fill(Color.glassBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: .radius(.large))
+                        .stroke(Color.separatorVeryFaint, lineWidth: 0.5)
+                )
                 
                 Spacer()
                 
@@ -202,7 +211,7 @@ struct SetupStage: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, .spacing(.medium))
-                    .background(Color.brandBlueBackground, in: RoundedRectangle(cornerRadius: 12))
+                    .background(Color.brandBlueBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
 
                     Text("What is Gemma?")
                         .font(.uHeadline)
@@ -219,8 +228,8 @@ struct SetupStage: View {
                     .lineSpacing(2)
                 }
                 .padding(.spacing(.large))
-                .background(RoundedRectangle(cornerRadius: 16).fill(Color.elevatedBackground))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separatorFaint, lineWidth: 0.5))
+                .background(RoundedRectangle(cornerRadius: .radius(.large)).fill(Color.elevatedBackground))
+                .overlay(RoundedRectangle(cornerRadius: .radius(.large)).stroke(Color.separatorFaint, lineWidth: 0.5))
                 .shadow(color: Color.shadowSubtle, radius: 8, x: 0, y: 4)
 
                 Button(action: onDownload) {
@@ -235,6 +244,7 @@ struct SetupStage: View {
                 .buttonStyle(.plain)
                 .interactiveScale()
             }
+            // swiftlint:disable:next hardcoded_frame_size
             .frame(width: 320)
         }
         .padding(.horizontal, .spacing(.large))
@@ -285,7 +295,7 @@ struct ProgressStage: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, .spacing(.medium))
-                    .background(Color.brandBlueBackground, in: RoundedRectangle(cornerRadius: 12))
+                    .background(Color.brandBlueBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
 
                     Text("Downloading models...")
                         .font(.uHeadline)
@@ -294,16 +304,16 @@ struct ProgressStage: View {
                     // Progress bar
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
+                            RoundedRectangle(cornerRadius: .radius(.small))
                                 .fill(Color.tertiaryGroupedBackground)
                                 .frame(width: geo.size.width)
 
-                            RoundedRectangle(cornerRadius: 4)
+                            RoundedRectangle(cornerRadius: .radius(.small))
                                 .fill(Color.brandBlue)
                                 .frame(width: geo.size.width * CGFloat(downloadProgress))
                         }
                     }
-                    .frame(height: 8)
+                    .frame(height: .sizing(.progressBarHeight))
 
                     HStack {
                         Text("\(Int(downloadProgress * 100))%")
@@ -323,8 +333,8 @@ struct ProgressStage: View {
                         .foregroundStyle(Color.secondaryLabelSubtle)
                 }
                 .padding(.spacing(.large))
-                .background(RoundedRectangle(cornerRadius: 16).fill(Color.elevatedBackground))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.separatorFaint, lineWidth: 0.5))
+                .background(RoundedRectangle(cornerRadius: .radius(.large)).fill(Color.elevatedBackground))
+                .overlay(RoundedRectangle(cornerRadius: .radius(.large)).stroke(Color.separatorFaint, lineWidth: 0.5))
                 .shadow(color: Color.shadowSubtle, radius: 8, x: 0, y: 4)
                 
                 Button {
@@ -340,6 +350,7 @@ struct ProgressStage: View {
                 .buttonStyle(.plain)
                 .disabled(true)
             }
+            // swiftlint:disable:next hardcoded_frame_size
             .frame(width: 320)
         }
         .padding(.horizontal, .spacing(.large))

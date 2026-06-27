@@ -34,7 +34,7 @@ struct OnboardingView: View {
                                 currentPage -= 1
                             }
                         } label: {
-                            HStack(spacing: 6) {
+                            HStack(spacing: .spacing(.xSmall)) {
                                 Image(systemName: Icons.chevronLeft)
                                 Text("Back")
                             }
@@ -51,7 +51,7 @@ struct OnboardingView: View {
                     
                     if currentPage > 0 {
                         // Slide progress indicator
-                        HStack(spacing: 4) {
+                        HStack(spacing: .spacing(.xxSmall)) {
                             Capsule()
                                 .fill(currentPage == 1 ? Color.accent : Color.secondaryLabelFaint)
                                 .frame(width: currentPage == 1 ? 24 : 8, height: 6)
@@ -95,6 +95,7 @@ struct OnboardingView: View {
                 Spacer()
             }
         }
+        // swiftlint:disable:next hardcoded_frame_size
         .frame(width: 720, height: 520)
     }
     

@@ -77,7 +77,10 @@ struct QuickInputView: View {
                     if viewModel.isSaving {
                         ProgressView()
                             .controlSize(.small)
-                            .frame(width: 44, height: 20)
+                            .frame(
+                                width: .sizing(.saveButtonProgressWidth),
+                                height: .sizing(.saveButtonProgressHeight)
+                            )
                     } else {
                         Text("Save")
                             .font(.uCaption)

@@ -53,6 +53,9 @@ struct DashboardView: View {
                 .padding(.vertical, .spacing(.medium))
             }
             .navigationTitle("Dashboard")
+            .refreshable {
+                await viewModel.refresh()
+            }
         }
         .task {
             await viewModel.refresh()
@@ -99,6 +102,8 @@ private struct CategoryTotalsCard: View {
                             .font(.uCaption)
                     }
                 }
+                .accessibilityLabel("Category totals chart")
+                .accessibilityValue("Totals across \(totals.count) categories")
                 .frame(height: max(100, CGFloat(totals.count) * 36))
             }
         }
@@ -145,6 +150,9 @@ private struct DailyValuesCard: View {
                             .font(.uNumeric)
                     }
                 }
+                .accessibilityLabel("Daily trend chart")
+                .accessibilityValue("Values over \(values.count) days")
+                // swiftlint:disable:next hardcoded_frame_size
                 .frame(height: 140)
             }
         }
@@ -204,6 +212,9 @@ private struct DailyActivityCard: View {
                                 .font(.uCaption2)
                         }
                     }
+                    .accessibilityLabel("Daily activity chart")
+                    .accessibilityValue("Event counts over \(activity.count) days")
+                    // swiftlint:disable:next hardcoded_frame_size
                     .frame(height: 100)
 
                     HStack(spacing: .spacing(.xxSmall)) {

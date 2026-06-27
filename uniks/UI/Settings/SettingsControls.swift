@@ -15,7 +15,7 @@ struct LocalModelRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
             HStack {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                     Text(model.name)
                         .font(.uBody)
                         .fontWeight(.semibold)
@@ -34,7 +34,7 @@ struct LocalModelRow: View {
                         Text("Download")
                             .font(.uCaption)
                             .fontWeight(.bold)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.onAccent)
                             .padding(.horizontal, .spacing(.medium))
                             .padding(.vertical, .spacing(.xxSmall))
                             .background(Gradients.brand, in: Capsule())
@@ -54,7 +54,7 @@ struct LocalModelRow: View {
                 ProgressView()
                     .progressViewStyle(.linear)
                     .tint(Color.accent)
-                    .padding(.top, 4)
+                    .padding(.top, .spacing(.xxSmall))
             }
         }
         .padding(.vertical, .spacing(.xxSmall))

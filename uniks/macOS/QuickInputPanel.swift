@@ -58,6 +58,7 @@ final class QuickInputPanelManager {
         if let hotKeyRef = self.hotKeyRef {
             let status = UnregisterEventHotKey(hotKeyRef)
             if status != noErr {
+                // swiftlint:disable:next potential_user_data_logging
                 print("QuickInputPanel: failed to unregister hotkey (status: \(status))")
             }
             self.hotKeyRef = nil
@@ -69,6 +70,7 @@ final class QuickInputPanelManager {
                 // Balance the retain passed to Carbon in `registerGlobalHotkey()`.
                 Unmanaged.passUnretained(self).release()
             } else {
+                // swiftlint:disable:next potential_user_data_logging
                 print("QuickInputPanel: failed to remove event handler (status: \(status))")
             }
         }
@@ -78,10 +80,10 @@ final class QuickInputPanelManager {
         let contentView = QuickInputView(viewModel: self.viewModel)
             .background(.ultraThinMaterial)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: .radius(.large))
                     .stroke(Gradients.brand, lineWidth: 1.2)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: .radius(.large)))
         
         let panel = QuickInputPanel(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 140),
@@ -145,6 +147,7 @@ final class QuickInputPanelManager {
             // The retained reference was not handed to Carbon; release it now.
             Unmanaged.passUnretained(self).release()
             // Diagnostic only; never log user data.
+            // swiftlint:disable:next potential_user_data_logging
             print("QuickInputPanel: failed to install Carbon event handler (status: \(installStatus))")
             return
         }
@@ -167,10 +170,12 @@ final class QuickInputPanelManager {
                     self.handlerRef = nil
                     Unmanaged.passUnretained(self).release()
                 } else {
+                    // swiftlint:disable:next potential_user_data_logging
                     print("QuickInputPanel: failed to remove partial event handler (status: \(removeStatus))")
                 }
             }
             // Diagnostic only; never log user data.
+            // swiftlint:disable:next potential_user_data_logging
             print("QuickInputPanel: failed to register global hotkey (status: \(registerStatus))")
             return
         }

@@ -264,6 +264,24 @@ Defined in `uniks/UI/DesignSystem/ViewModifiers.swift`.
 - `.interactiveScale()` — applies spring-based press scaling (scales down to 0.97 on click/press) for premium tactile feedback.
 - `.premiumTextFieldStyle()` — applies rounded background shapes and delicate borders to text inputs.
 
+## Spacing and sizing rules
+
+Spacing and sizing are not arbitrary. Every margin, gap, and corner radius must come from the design system.
+
+- **Padding:** Use `CGFloat.spacing(_:)` for every `.padding()` modifier. `spacing: 0` is allowed only when intentionally removing gaps.
+- **Stack gaps:** Use `CGFloat.spacing(_:)` for every `spacing:` argument in `HStack`, `VStack`, `LazyVStack`, etc.
+- **Corner radii:** Use `CGFloat.radius(_:)` for every `cornerRadius`. Use `Radius.pill` for chips, badges, and capsules.
+- **Frame sizes:** Prefer shared constants or documented layout values. Hardcoded `.frame(width:height:)` is allowed only for one-off layouts (charts, onboarding hero art) and must be accompanied by a `// swiftlint:disable:next hardcoded_frame_size` comment explaining why a token cannot be used.
+- **No magic numbers:** `4`, `6`, `8`, `12`, `16`, `20`, `24`, `32`, `48` all have tokens. Use them.
+
+## Button guidelines
+
+- **Tactile feedback:** Apply `.interactiveScale()` to every tappable custom button.
+- **Primary actions:** Use `Gradients.brand` fills with `Color.onAccent` text, or the system `.borderedProminent` style.
+- **Secondary actions:** Use `Color.accentSoft` background with `Color.accent` foreground.
+- **Destructive actions:** Use `Color.negativeSubtle` background with `Color.negative` foreground.
+- **Icon-only buttons:** Must include `.accessibilityLabel(...)`.
+- **Loading states:** Replace button text with a `ProgressView()` and disable the button.
 
 ## Do and don't
 
@@ -287,6 +305,11 @@ Text("Hello")
     .font(.system(size: 14))
     .foregroundStyle(.gray)
     .padding(8)
+
+HStack(spacing: 6) {
+    Image(systemName: "plus")
+    Text("Log")
+}
 
 Text("Running")
     .padding(.horizontal, 8)

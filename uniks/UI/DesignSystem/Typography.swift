@@ -8,6 +8,9 @@
 
 import SwiftUI
 
+// This file is the canonical source of system(size:) font definitions; views must use Font.u* tokens.
+// swiftlint:disable hardcoded_font_size
+
 enum Typography {
     static let title = Font.system(.largeTitle, design: .rounded).weight(.bold)
     static let headline = Font.system(.headline, design: .rounded).weight(.semibold)
@@ -66,3 +69,5 @@ extension Font {
     static let uMonospacedBody = Typography.monospacedBody
     static let uMonospacedCaption = Typography.monospacedCaption
 }
+
+// swiftlint:enable hardcoded_font_size

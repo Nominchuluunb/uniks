@@ -36,7 +36,7 @@ The ingestion path is optimistic: the raw event is saved and indexed immediately
 
 | Path | Responsibility |
 |------|----------------|
-| `uniks/ContentView.swift` | Root container. iOS uses a `TabView` (Events, Dashboard, Settings). macOS uses a `NavigationSplitView` with `SidebarView`, `EventListView`, and `InspectorView`. |
+| `uniks/ContentView.swift` | Root container. iOS uses a `TabView` (Events, Dashboard, Log, Settings) where the Log tab opens the quick-input sheet. macOS uses a `NavigationSplitView` with `SidebarView`, `EventListView`, and `InspectorView`; Dashboard renders in the detail pane. |
 | `uniks/UI/HUD/` | Quick-input HUD (shared `QuickInputView`, iOS sheet wrapper, macOS panel manager). |
 | `uniks/UI/EventList/` | Searchable event list, event row metadata, event edit sheet. |
 | `uniks/UI/Dashboard/` | Charts and aggregations from parsed events. |

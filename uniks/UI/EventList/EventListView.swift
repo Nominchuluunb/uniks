@@ -40,11 +40,7 @@ struct EventListView: View {
         NavigationStack {
             Group {
                 if filteredEvents.isEmpty {
-                    UEmptyState(
-                        icon: Icons.emptyEvents,
-                        title: "No events yet",
-                        message: eventListHint
-                    )
+                    emptyStateView
                 } else {
                     #if os(iOS)
                     ScrollView {
@@ -61,6 +57,9 @@ struct EventListView: View {
                         .padding(.vertical, .spacing(.medium))
                     }
                     .background(Color.groupedBackground)
+                    .refreshable {
+                        await viewModel.refresh()
+                    }
                     #else
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 0) {
@@ -94,6 +93,9 @@ struct EventListView: View {
                         .padding(.bottom, .spacing(.medium))
                     }
                     .background(Color.groupedBackground)
+                    .refreshable {
+                        await viewModel.refresh()
+                    }
                     #endif
                 }
             }
@@ -185,11 +187,26 @@ struct EventListView: View {
         "Press Cmd + Shift + U or click + to log your first event."
         #endif
     }
+
+    private var emptyStateView: some View {
+        if viewModel.isSearchActive {
+            return UEmptyState(
+                icon: Icons.inspector,
+                title: "No matches",
+                message: "Try a different search term."
+            )
+        } else {
+            return UEmptyState(
+                icon: Icons.emptyEvents,
+                title: "No events yet",
+                message: eventListHint
+            )
+        }
+    }
 }
 
 private struct EventRowCard: View {
     let event: HabitEvent
-    @State private var isHovered = false
 
     var body: some View {
         HStack(alignment: .top, spacing: .spacing(.medium)) {
@@ -224,29 +241,10 @@ private struct EventRowCard: View {
                     .foregroundStyle(Color.secondaryLabel)
             }
         }
-        .padding(.spacing(.medium))
-        .background(
-            RoundedRectangle(cornerRadius: .radius(.medium))
-                .fill(Color.secondaryGroupedBackground)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: .radius(.medium))
-                .stroke(
-                    isHovered ? Color.accentMuted : Color.separatorFaint,
-                    lineWidth: isHovered ? 1.0 : 0.5
-                )
-        )
-        .shadow(
-            color: isHovered ? Color.shadowMedium : Color.shadowVerySubtle,
-            radius: isHovered ? 6 : 2,
-            x: 0,
-            y: isHovered ? 3 : 1
-        )
-        .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.15)) {
-                isHovered = hovering
-            }
-        }
+        .cardStyle()
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Double-tap to edit this event.")
     }
 }
 
@@ -325,18 +323,18 @@ private struct TimelineRow: View {
             // Left category color vertical indicator bar
             Rectangle()
                 .fill(categoryColor)
-                .frame(width: 4)
+                .frame(width: .sizing(.categoryIndicatorWidth))
 
             HStack(alignment: .top, spacing: .spacing(.small)) {
                 // Category icon
                 Image(systemName: Icons.categorySymbol(for: category))
                     .font(.uBrandTitle2)
                     .foregroundStyle(categoryColor)
-                    .frame(width: 24, height: 24)
-                    .padding(.top, 2)
+                    .frame(width: .sizing(.categoryIconSize), height: .sizing(.categoryIconSize))
+                    .padding(.top, .spacing(.xxxSmall))
 
                 // Content
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: .spacing(.xxSmall)) {
                     Text(event.rawInput)
                         .font(.uBody)
                         .fontWeight(.semibold)
@@ -371,7 +369,7 @@ private struct TimelineRow: View {
                 Spacer()
 
                 // Right aligned metadata
-                VStack(alignment: .trailing, spacing: 4) {
+                VStack(alignment: .trailing, spacing: .spacing(.xxSmall)) {
                     Text(event.createdAt, style: .time)
                         .font(.uNumeric)
                         .foregroundStyle(Color.secondaryLabel)
@@ -392,5 +390,8 @@ private struct TimelineRow: View {
                 isHovered = hovering
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Double-tap to inspect this event.")
     }
 }

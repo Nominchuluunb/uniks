@@ -12,8 +12,9 @@ excluded:
 # Rules
 opt_in_rules:
   - empty_count
-  - explicit_self
   - force_unwrapping
+  - force_try
+  - force_cast
   - implicitly_unwrapped_optional
   - joined_default_parameter
   - legacy_random
@@ -27,6 +28,16 @@ opt_in_rules:
   - unneeded_parentheses_in_closure_argument
   - vertical_whitespace_closing_braces
   - weak_delegate
+  - duplicate_imports
+  - prefer_zero_over_explicit_init
+  - lower_acl_than_parent
+  - multiline_function_chains
+
+# Analyzer rules require `swiftlint analyze` and a compiler index.
+analyzer_rules:
+  - explicit_self
+  - unused_import
+  - unused_declaration
 
 disabled_rules:
   - trailing_whitespace
@@ -57,5 +68,54 @@ function_body_length:
 cyclomatic_complexity:
   warning: 12
   error: 20
+
+# Custom rules enforcing the Uniks design system and coding standards.
+# See docs/DESIGN_SYSTEM.md and AI_RULES.md for rationale.
+custom_rules:
+  hardcoded_padding:
+    name: "Hardcoded Padding"
+    regex: '\.padding\(\s*(?:\.[a-zA-Z]+\s*,\s*)?[1-9][0-9]*\s*\)'
+    message: "Use CGFloat.spacing(_:) tokens for padding. See docs/DESIGN_SYSTEM.md."
+    severity: error
+  hardcoded_stack_spacing:
+    name: "Hardcoded Stack Spacing"
+    regex: '\bspacing:\s*[1-9][0-9]*\b'
+    message: "Use CGFloat.spacing(_:) tokens for stack spacing. See docs/DESIGN_SYSTEM.md."
+    severity: error
+  hardcoded_font_size:
+    name: "Hardcoded Font Size"
+    regex: '\.system\(\s*size:\s*[0-9]+'
+    message: "Use Font.u* typography tokens. Typography.swift is the only allowed source of system(size:)."
+    severity: error
+  raw_sf_symbol:
+    name: "Raw SF Symbol String"
+    regex: '(?:systemName|systemImage):\s*"[^"]+"'
+    message: "Use Icons.* constants from the design system."
+    severity: error
+  literal_color:
+    name: "Literal Color"
+    regex: 'Color\.(?:blue|red|green|orange|purple|yellow|teal|pink|indigo|gray|cyan|mint|brown)\b'
+    message: "Use Color tokens from DesignTokens.swift."
+    severity: error
+  hardcoded_frame_size:
+    name: "Hardcoded Frame Size"
+    regex: '\.frame\s*\(\s*(?:width|height)\s*:\s*[1-9][0-9]*\s*(?:,\s*(?:width|height)\s*:\s*[1-9][0-9]*\s*)?\)'
+    message: "Prefer shared sizing constants or design-system tokens for frame sizes."
+    severity: warning
+  legacy_dispatch_main_async:
+    name: "Legacy DispatchQueue.main.async"
+    regex: 'DispatchQueue\.main\.async'
+    message: "Use @MainActor or await MainActor.run. See AI_RULES.md."
+    severity: error
+  legacy_dispatch_global:
+    name: "Legacy DispatchQueue.global"
+    regex: 'DispatchQueue\.global'
+    message: "Use Swift Structured Concurrency (Task, actor). See AI_RULES.md."
+    severity: error
+  potential_user_data_logging:
+    name: "Potential User Data Logging"
+    regex: '\b(?:NSLog|print)\s*\('
+    message: "Avoid logging user data; redact or use a dedicated diagnostic logger. See AI_RULES.md."
+    severity: warning
 
 reporter: "xcode"

@@ -60,4 +60,31 @@ final class EventListViewModel {
             }
         }
     }
+
+    /// Refreshes the current search results synchronously so it can be used inside `.refreshable`.
+    func refresh() async {
+        searchTaskID += 1
+        let taskID = searchTaskID
+
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            searchResults = []
+            return
+        }
+
+        isSearching = true
+        defer { if searchTaskID == taskID { isSearching = false } }
+
+        do {
+            let results = try await ftsService.search(query: trimmed)
+            try Task.checkCancellation()
+            guard searchTaskID == taskID else { return }
+            searchResults = results
+        } catch is CancellationError {
+            // no-op
+        } catch {
+            guard searchTaskID == taskID else { return }
+            searchResults = []
+        }
+    }
 }

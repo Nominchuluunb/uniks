@@ -8,6 +8,9 @@
 
 import SwiftUI
 
+// This file is the canonical source of literal SwiftUI colors; all other views must use the exported tokens.
+// swiftlint:disable literal_color
+
 // MARK: - Spacing
 
 enum Spacing: CGFloat {
@@ -40,6 +43,25 @@ enum Radius: CGFloat {
 extension CGFloat {
     static func radius(_ token: Radius) -> CGFloat {
         token.rawValue
+    }
+}
+
+// MARK: - Sizing
+
+/// Shared one-off dimensions that do not fit the spacing or radius token scales.
+/// Prefer these over magic numbers; if a value is truly unique, document it with
+/// `// swiftlint:disable:next hardcoded_frame_size`.
+enum Sizing: CGFloat {
+    case categoryIndicatorWidth = 4
+    case categoryIconSize = 24
+    case progressBarHeight = 8
+    case saveButtonProgressWidth = 44
+    case saveButtonProgressHeight = 20
+}
+
+extension CGFloat {
+    static func sizing(_ constant: Sizing) -> CGFloat {
+        constant.rawValue
     }
 }
 
@@ -234,3 +256,5 @@ enum Gradients {
         )
     }
 }
+
+// swiftlint:enable literal_color

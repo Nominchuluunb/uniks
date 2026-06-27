@@ -14,11 +14,18 @@ This document defines the coding standards and behavioral rules for AI agents an
 - Use `async/await` and Swift Structured Concurrency exclusively.
 - **No completion handlers.** Refactor legacy closures to `async` functions.
 - **No `DispatchQueue.main.async`.** Use `@MainActor` or `await MainActor.run` where necessary.
+- **No `DispatchQueue.global`.** Use `Task`, `TaskGroup`, or custom actors.
 - Isolate long-running work in explicit `actor`s:
   - `ParsingActor` for NLP parsing.
   - `OllamaLLMEngine` for localhost network calls.
   - `FTSService` for full-text indexing.
 - Never block the main thread. Persistence, parsing, search, and model loading are background concerns.
+- **Race-condition prevention:**
+  - Do not share mutable state between actors; pass values or use actor-isolated properties.
+  - Use atomic counters or `Task` ownership for cancellable work (e.g., `searchTaskID` in `EventListViewModel`).
+  - Always `await` tasks and actor calls; never fire-and-forget a `Task` that mutates shared state without retaining or awaiting it.
+  - Cancel stale work before starting new work (`Task.checkCancellation()` inside the task).
+- **@MainActor discipline:** Keep view models and views on the main actor. Heavy work belongs in background actors. Use `await` to cross actor boundaries.
 
 ## 3. SwiftData Rules
 
@@ -31,9 +38,15 @@ This document defines the coding standards and behavioral rules for AI agents an
 ## 4. UI Rules
 
 - **Design system only.** All UI must use tokens and components in `uniks/UI/DesignSystem/` and `uniks/UI/Shared/`. See [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md).
+- **Spacing tokens only.** Use `CGFloat.spacing(_:)` for every `.padding()` and `spacing:` value. `spacing: 0` is allowed only when explicitly removing gaps.
+- **Sizing tokens only.** Use `CGFloat.radius(_:)` for corner radii. Frame sizes should use shared constants or be documented with a `// swiftlint:disable:next hardcoded_frame_size` comment if a hardcoded size is unavoidable.
+- **Typography tokens only.** Use `Font.u*` static properties. `Typography.swift` is the only file allowed to call `.system(size:)`.
+- **Color tokens only.** Use colors from `uniks/UI/DesignSystem/DesignTokens.swift`. `DesignTokens.swift` is the only file allowed to use literal `Color.(blue|red|...)` values.
+- **Icon tokens only.** Use `Icons.*` constants. Never use raw SF Symbol strings in views.
+- **Buttons.** Use `.interactiveScale()` for tactile feedback. Primary actions use `Gradients.brand` or `Color.accent`. Destructive actions use `Color.negative`. Every icon-only button must have an `.accessibilityLabel`.
+- **Forms and lists.** Prefer `Form` and `List` for native settings, but do not add hardcoded padding inside them; rely on sections and design-system cell content.
 - **Optimistic execution:** Save the raw event as `.pending` instantly; parse asynchronously.
 - Keep UI transitions under **80 ms** for the input path.
-- Use native SF Symbols and dynamic colors via the design system.
 - Respect Apple HIG for visual density and scannability.
 - `@MainActor` is for UI state only.
 
@@ -55,9 +68,11 @@ This document defines the coding standards and behavioral rules for AI agents an
 
 ## 7. Code Quality Rules
 
-- Follow [`.swiftlint.yml`](.swiftlint.yml).
+- Follow [`.swiftlint.yml`](.swiftlint.yml); run `swiftlint lint --config .swiftlint.yml --strict` before opening a PR.
 - Prefer small, focused files and protocols.
 - Use `Sendable` and `nonisolated` correctly.
+- Mark value types and reference types with the correct isolation; avoid `nonisolated(unsafe)` unless unavoidable and documented.
+- Prefer `any Protocol` only when type erasure is required; use concrete types or generics where possible.
 - Document public APIs with Swift documentation comments.
 - Keep view models thin; business logic belongs in actors and services.
 
@@ -73,11 +88,18 @@ This document defines the coding standards and behavioral rules for AI agents an
 The following are not allowed unless explicitly approved:
 
 - `DispatchQueue.global` or `.main.async`.
+- Completion handlers where `async/await` can be used.
 - `NSLog` or `print` of user data.
+- `!` force unwraps, `as!` force casts, and `try!` unless wrapped in a documented, locally justified `// swiftlint:disable:next`.
+- Raw SF Symbol strings (`systemName: "plus"`) outside `Icons.swift`.
+- Literal colors (`.blue`, `Color.red`) outside `DesignTokens.swift`.
+- Hardcoded `.system(size:)` fonts outside `Typography.swift`.
+- Hardcoded `.padding(..., 8)` or `spacing: 8` instead of `CGFloat.spacing(_:)` tokens.
 - Third-party networking libraries (use `URLSession`).
 - Third-party databases for primary persistence (use SwiftData).
 - CloudKit without documented end-to-end encryption design.
 - Inline custom styling that bypasses the design system.
+- Fire-and-forget `Task { ... }` that mutates shared state without ownership or cancellation.
 
 ## 10. Documentation is Code
 

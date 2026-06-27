@@ -90,8 +90,8 @@ struct SidebarView: View {
                                     Text("\(count)")
                                         .font(.uCaption)
                                         .foregroundStyle(Color.secondaryLabel)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
+                                        .padding(.horizontal, .spacing(.xSmall))
+                                        .padding(.vertical, .spacing(.xxxSmall))
                                         .background(Color.tertiaryGroupedBackground, in: Capsule())
                                 }
                             }
@@ -118,8 +118,8 @@ struct SidebarView: View {
                                                 Text("\(count)")
                                                     .font(.uCaption)
                                                     .foregroundStyle(Color.secondaryLabel)
-                                                    .padding(.horizontal, 6)
-                                                    .padding(.vertical, 2)
+                                                    .padding(.horizontal, .spacing(.xSmall))
+                                                    .padding(.vertical, .spacing(.xxxSmall))
                                                     .background(Color.tertiaryGroupedBackground, in: Capsule())
                                             }
                                         }
@@ -156,7 +156,7 @@ struct SidebarView: View {
                         .padding(.spacing(.xxSmall))
                         .background(Color.brandBlueGlowMedium, in: Circle())
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: .spacing(.xxxSmall)) {
                         Text("Local, offline intelligence")
                             .font(.uMicroBold)
                             .foregroundStyle(Color.primaryLabel)
@@ -169,11 +169,11 @@ struct SidebarView: View {
                 }
                 .padding(.spacing(.small))
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: .radius(.medium))
                         .fill(Color.brandBlueBackground)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: .radius(.medium))
                         .stroke(Color.brandBlueBorder, lineWidth: 0.5)
                 )
             }

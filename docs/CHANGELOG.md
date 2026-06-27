@@ -6,6 +6,20 @@ All notable changes to Uniks are documented in this file.
 
 ### Added
 
+- **iOS Log tab** — Added a dedicated "Log" tab to the iOS tab bar so capture is one tap away from any screen.
+- **Pull-to-refresh** — Event list and dashboard now refresh search results and aggregations on pull-down.
+- **Search empty state** — Searching the event list now shows a distinct "No matches" state instead of the generic empty state.
+- **Chart accessibility** — Dashboard and inspector charts now expose accessibility labels and values for VoiceOver.
+- **Row accessibility** — Event rows and timeline rows are now combined accessibility elements with button traits.
+- **Lint enforcement** — Added SwiftLint custom rules for hardcoded padding, stack spacing, font sizes, frame sizes, raw SF Symbols, literal colors, `DispatchQueue`, and `print`/`NSLog` of user data.
+
+### Fixed / Cleanup
+
+- **macOS Dashboard placeholder** — Replaced the confusing "General Overview" placeholder list with a `ContentUnavailableView` and kept the real dashboard in the detail pane.
+- **Design-token drift** — Removed remaining hardcoded corner radii in onboarding, event list, sidebar, and HUD views; replaced custom card backgrounds with `.cardStyle()`.
+- **Hardcoded spacing cleanup** — Replaced all hardcoded numeric `spacing:` and `.padding()` values in `uniks/` with `CGFloat.spacing(_:)` tokens.
+- **Settings consistency** — macOS Settings now uses `Form` sections like iOS, unifying the cross-platform experience.
+- **Docs** — Expanded `AI_RULES.md` with UI, concurrency, type-safety, and antipattern guidance; added "Spacing and sizing rules" and "Button guidelines" to `docs/DESIGN_SYSTEM.md`.
 - **Micro-interactions & Animations** — Added `.interactiveScale()` springy press gestures, macOS card hover states, and breathing variable-color animations on `UBadge` during AI parsing.
 
 ### Fixed / Cleanup
