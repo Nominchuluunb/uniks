@@ -6,12 +6,34 @@ All notable changes to Uniks are documented in this file.
 
 ### Added
 
+- Real streaming Gemma model download with progress, cancel, retry, resume, delete, and disk-space preflight.
+- `ModelStore` actor for cached model containers (instant repeated inference).
+- `ActiveModelPreference` persistence with auto-activation on download.
+- `UButton`, `UProgressBar`, `USectionHeader`, `UModelCard`, `UEngineStatusBadge`, `UStatBox` shared components.
+- Dashboard hero stat row (total events, current streak, top category).
+- Dashboard streaks computation and insights generation.
+- Global engine-status badge in macOS sidebar, iOS toolbar, and HUD.
+- Inline parsed-chip preview in HUD after successful capture.
 - **iOS Log tab** — Added a dedicated "Log" tab to the iOS tab bar so capture is one tap away from any screen.
 - **Pull-to-refresh** — Event list and dashboard now refresh search results and aggregations on pull-down.
 - **Search empty state** — Searching the event list now shows a distinct "No matches" state instead of the generic empty state.
 - **Chart accessibility** — Dashboard and inspector charts now expose accessibility labels and values for VoiceOver.
 - **Row accessibility** — Event rows and timeline rows are now combined accessibility elements with button traits.
 - **Lint enforcement** — Added SwiftLint custom rules for hardcoded padding, stack spacing, font sizes, frame sizes, raw SF Symbols, literal colors, `DispatchQueue`, and `print`/`NSLog` of user data.
+
+### Changed
+
+- Standardized on Gemma models (Gemma 3 1B QAT 4-bit default, Gemma 2 2B quality option) replacing Llama 3.2.
+- Onboarding wired to real download (fake timer removed), with error/retry/skip escape hatches.
+- Settings model management rebuilt with `UModelCard` and real progress binding.
+- `MLXLLMEngine` now uses `ModelStore` for cached containers (no reload per parse).
+- `EngineResolver` reads `ActiveModelPreference` for active model selection.
+- **Premium UI Overhaul** — Refactored all screens (Events, Dashboard, Settings, Onboarding, HUD) to follow Apple's latest macOS 14/iOS 17 design aesthetics.
+- **Swift Charts Dashboard** — Completely rewrote the manual dashboard charts using Apple's first-party `Swift Charts` framework (featuring gradient area fills, smooth Catmull-Rom interpolation, and custom dashed gridlines).
+- **Rounded Typography & Gradients** — Shifted core design system tokens to use rounded system typography and modern brand gradient meshes.
+- **Glassmorphic Cards** — Updated `UCard` and general cards to use dynamic SwiftUI material styles (`.regularMaterial`), custom separators, and high-fidelity elevation shadows.
+- **iOS Sheet Detents** — Compacted the quick-input sheet on iOS using modern presentation height detents and custom drag indicators.
+- **Onboarding Carousel** — Redesigned onboarding to feature gradient circular backings, expanding capsular slide indicators, and brand-gradient button shapes.
 
 ### Fixed / Cleanup
 
@@ -36,15 +58,6 @@ All notable changes to Uniks are documented in this file.
 - **Design-system cleanup** — removed all remaining inline `.system(size:)` fonts, raw SF Symbol strings, and literal colors from views; centralized them in `DesignTokens.swift`, `Typography.swift`, and `Icons.swift`.
 - **Dynamic Chip Icons** — `UChip` now renders contextual icons (`folder`, `number`, `tag`) automatically to improve scannability of parsed logs.
 - **Spotlight-Style HUD** — macOS floating panel is now fully borderless, transparent, glassmorphic (using `.ultraThinMaterial`), hides on click-away, and closes on pressing `Escape`.
-
-### Changed
-
-- **Premium UI Overhaul** — Refactored all screens (Events, Dashboard, Settings, Onboarding, HUD) to follow Apple's latest macOS 14/iOS 17 design aesthetics.
-- **Swift Charts Dashboard** — Completely rewrote the manual dashboard charts using Apple's first-party `Swift Charts` framework (featuring gradient area fills, smooth Catmull-Rom interpolation, and custom dashed gridlines).
-- **Rounded Typography & Gradients** — Shifted core design system tokens to use rounded system typography and modern brand gradient meshes.
-- **Glassmorphic Cards** — Updated `UCard` and general cards to use dynamic SwiftUI material styles (`.regularMaterial`), custom separators, and high-fidelity elevation shadows.
-- **iOS Sheet Detents** — Compacted the quick-input sheet on iOS using modern presentation height detents and custom drag indicators.
-- **Onboarding Carousel** — Redesigned onboarding to feature gradient circular backings, expanding capsular slide indicators, and brand-gradient button shapes.
 
 
 ## 2026-06-24

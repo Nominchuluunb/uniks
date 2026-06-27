@@ -37,6 +37,14 @@ Use `CGFloat.radius(_:)` for standard radii or `Radius.pill` for full rounding.
 | `.large` | 16 | Large sheets/panels. |
 | `Radius.pill` | 999 | Chips, badges, capsules. |
 
+### Sizing
+
+Use `CGFloat.sizing(_:)` for fixed dimension tokens.
+
+| Token | Use case |
+|-------|----------|
+| `.progressBarHeight` | Height of `UProgressBar` track. |
+
 ### Colors
 
 Use only these semantic colors and gradients. No literal colors or hardcoded `.opacity(...)` in views.
@@ -254,6 +262,98 @@ UFlowLayout(spacing: .small) {
     UChip(text: "tag2", style: .tag)
 }
 ```
+
+### `UButton`
+
+Reusable button with variant styles, loading state, tactile feedback, and accessibility support.
+
+```swift
+UButton("Download", style: .primary) { await startDownload() }
+UButton("Cancel", style: .secondary) { cancel() }
+UButton("Delete", style: .destructive) { deleteModel() }
+UButton("Loading…", style: .primary, isLoading: true) { }
+```
+
+Styles:
+- `.primary` — `Gradients.brand` fill with `Color.onAccent` text.
+- `.secondary` — `Color.accentSoft` background with `Color.accent` foreground.
+- `.destructive` — `Color.negativeSubtle` background with `Color.negative` foreground.
+
+Features:
+- `.interactiveScale()` applied automatically for tactile spring feedback.
+- `isLoading` replaces label with `ProgressView()` and disables interaction.
+- `accessibilityLabel` parameter for icon-only or context-dependent labeling.
+
+### `UProgressBar`
+
+Determinate progress bar using design tokens.
+
+```swift
+UProgressBar(progress: 0.65)
+```
+
+- Height controlled by `.sizing(.progressBarHeight)` token.
+- Uses `Color.accent` fill on `Color.tertiaryGroupedBackground` track.
+- Corner radius via `CGFloat.radius(.small)`.
+
+### `USectionHeader`
+
+Icon + title section header pattern for settings and detail views.
+
+```swift
+USectionHeader(icon: Icons.model, title: "Local Models")
+```
+
+- Uses `Font.uHeadline` and `Color.primaryLabel`.
+- Icon tinted with `Color.accent`.
+
+### `UModelCard`
+
+Model management card displaying download state, progress, and actions.
+
+```swift
+UModelCard(
+    model: localModel,
+    isActive: true,
+    progress: 0.42,
+    onDownload: { download(model) },
+    onCancel: { cancel(model) },
+    onDelete: { delete(model) },
+    onActivate: { activate(model) }
+)
+```
+
+- Shows model name, size, and status badge.
+- Integrates `UProgressBar` during active download.
+- Active state highlighted with `Color.accentSubtle` background and checkmark.
+- Action buttons use `UButton` variants (primary for download, destructive for delete).
+
+### `UEngineStatusBadge`
+
+Compact engine status indicator for sidebars, toolbars, and HUD.
+
+```swift
+UEngineStatusBadge(status: .ready)
+UEngineStatusBadge(status: .downloading(progress: 0.5))
+UEngineStatusBadge(status: .error)
+```
+
+- Renders as a small pill with icon + short label.
+- Uses `Color.positive` for ready, `Color.accent` for downloading, `Color.negative` for error.
+- Displayed in macOS sidebar, iOS toolbar, and HUD overlay.
+
+### `UStatBox`
+
+Hero stat card for dashboard metrics.
+
+```swift
+UStatBox(title: "Total Events", value: "142", icon: Icons.events)
+UStatBox(title: "Current Streak", value: "7 days", icon: Icons.bolt)
+```
+
+- Uses `Font.uHeadline` for value, `Font.uCaption` for title.
+- `.cardStyle()` applied for consistent elevation.
+- Icon tinted with `Color.accent`.
 
 ## View modifiers
 

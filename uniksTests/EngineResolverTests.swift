@@ -52,7 +52,7 @@ struct EngineResolverTests {
     @Test func mlxPreferenceFallsBackOnSimulator() async throws {
         let resolver = EngineResolver(
             preference: .mlx,
-            mlxFactory: { MockLLMEngine(result: HabitParseResult(category: "mlx")) },
+            mlxFactory: { _, _ in MockLLMEngine(result: HabitParseResult(category: "mlx")) },
             ollamaFactory: { MockLLMEngine(result: HabitParseResult(category: "ollama")) },
             mockFactory: { MockLLMEngine(result: HabitParseResult(category: "mock")) }
         )
@@ -66,7 +66,7 @@ struct EngineResolverTests {
     @Test func mlxPreferenceReturnsMLXFactoryEngineOnDevice() async throws {
         let resolver = EngineResolver(
             preference: .mlx,
-            mlxFactory: { MockLLMEngine(result: HabitParseResult(category: "mlx")) },
+            mlxFactory: { _, _ in MockLLMEngine(result: HabitParseResult(category: "mlx")) },
             ollamaFactory: { MockLLMEngine(result: HabitParseResult(category: "ollama")) }
         )
         let engine = await resolver.resolve()

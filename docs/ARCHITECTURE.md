@@ -65,9 +65,34 @@ The JSON payload column keeps the schema flexible; adding new parsed fields does
 
 - `HabitEventService` — orchestrates optimistic save, FTS indexing, and background parsing.
 - `FTSService` — SQLite FTS5 full-text index over `rawInput`.
-- `LocalModelManager` — checks Hugging Face cache and downloads MLX models.
+- `LocalModelManager` — actor managing the full model lifecycle: catalog, status, download with `AsyncStream` progress, cancel, retry, delete, and disk-space preflight checks.
+- `ModelStore` — actor that caches loaded MLX `ModelContainer` instances so repeated inference calls reuse the same loaded model without reloading from disk.
+- `ActiveModelPreference` — `UserDefaults`-backed persistence of the active model identifier. Automatically set on successful download completion.
 - `ModelContainer+Factory` — canonical SwiftData container configuration.
-- `EngineResolver` — selects the concrete `LocalLLMEngine` based on preference and runtime.
+- `EngineResolver` — selects the concrete `LocalLLMEngine` based on preference, runtime, and `ActiveModelPreference`.
+
+### Core / Download Pipeline (`uniks/Core/Services/`)
+
+The model download subsystem is layered for testability:
+
+```
+ModelDownloaderProtocol
+        │
+        ▼
+HuggingFaceModelDownloader   ←  wraps HubClient with progressHandler
+        │
+        ▼
+LocalModelManager (actor)    ←  AsyncStream progress, cancel/retry/delete/disk-preflight
+        │
+        ▼
+ModelStore (actor)           ←  caches loaded ModelContainer for instant repeated inference
+```
+
+- **`ModelDownloaderProtocol`** — abstraction over the raw download operation. Enables `MockModelDownloader` injection in tests.
+- **`HuggingFaceModelDownloader`** — concrete implementation wrapping `HubClient` from `swift-huggingface`. Reports progress via `progressHandler` callback.
+- **`LocalModelManager`** — orchestrates the full lifecycle: checks available disk space before starting, exposes download progress as an `AsyncStream<Double>`, supports cancel/retry/resume, and handles model deletion from the local cache.
+- **`ModelStore`** — after a model is downloaded, `ModelStore` loads and caches the `ModelContainer` so that `MLXLLMEngine` can perform inference instantly without reloading weights on each parse call.
+- **`ActiveModelPreference`** — stores the active model ID in `UserDefaults`. When a download completes successfully, the downloaded model is automatically activated. `EngineResolver` reads this preference to determine which model `MLXLLMEngine` should use.
 
 ### Core / Engines (`uniks/Core/Engines/`)
 
@@ -79,7 +104,9 @@ All engines conform to `LocalLLMEngine` (`uniks/Core/Protocols/LocalLLMEngine.sw
 | `OllamaLLMEngine` | `http://localhost:11434` | `URLSession` |
 | `MockLLMEngine` | Simulator, tests, fallback | deterministic result |
 
-`EngineResolver.preferredEngine` applies fallback logic: on simulator, MLX falls back to Ollama then Mock; Ollama falls back to Mock; Mock always returns Mock.
+`MLXLLMEngine` reads from `ModelStore` for cached model containers (no reload per parse) and uses `ActiveModelPreference` to determine which model to load.
+
+`EngineResolver.preferredEngine` applies fallback logic: on simulator, MLX falls back to Ollama then Mock; Ollama falls back to Mock; Mock always returns Mock. `EngineResolver` reads `ActiveModelPreference` for active model selection.
 
 ### App entry point
 
@@ -118,6 +145,6 @@ On-device models are downloaded from Hugging Face (`huggingface.co`) on first se
 In addition to Apple frameworks, Uniks links the following Swift packages:
 
 - `mlx-swift-lm` — on-device MLX inference (`MLXLMCommon`, `MLXLLM`, `MLXHuggingFace`).
-- `swift-huggingface` — Hugging Face Hub integration (`HuggingFace`).
+- `swift-huggingface` — Hugging Face Hub integration (`HuggingFace`). Used by `HuggingFaceModelDownloader` to download model weights with progress reporting via `HubClient`.
 - `swift-transformers` — tokenizers (`Tokenizers`).
 - `SwiftFTS` — SQLite FTS5 full-text search.

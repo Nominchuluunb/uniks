@@ -113,12 +113,14 @@ All UI follows a single clean native iOS/macOS design system. Tokens and shared 
 
 ## Local LLM Setup (Optional)
 
-If you prefer a larger localhost model:
+Uniks uses **Gemma** models by default (Gemma 3 1B QAT 4-bit for speed, Gemma 2 2B for quality). These are downloaded automatically during onboarding or from Settings.
+
+If you prefer a larger localhost model via Ollama:
 
 1. Install [Ollama](https://ollama.com).
 2. Pull a small instruct model:
    ```bash
-   ollama pull llama3.2:3b
+   ollama pull gemma2:2b
    ```
 3. In Uniks settings, switch the engine to **Ollama (localhost)**.
 

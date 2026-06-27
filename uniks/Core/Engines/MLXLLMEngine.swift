@@ -2,15 +2,11 @@
 //  MLXLLMEngine.swift
 //  uniks
 //
-//  On-device Apple MLX inference engine. Requires a physical Apple Silicon device.
+//  On-device Apple MLX inference engine using cached model containers.
 //
 
 import Foundation
-import HuggingFace
-import MLXHuggingFace
-import MLXLLM
 import MLXLMCommon
-import Tokenizers
 
 /// Errors specific to the on-device MLX engine.
 enum MLXLLMEngineError: Error, Sendable, Equatable {
@@ -19,28 +15,29 @@ enum MLXLLMEngineError: Error, Sendable, Equatable {
 }
 
 /// On-device parser using Apple's MLX framework via `MLXLMCommon`.
-/// This engine is only functional on physical Apple Silicon devices.
+/// Uses `ModelStore` for cached model loading — first parse loads the model,
+/// subsequent parses are near-instant.
 actor MLXLLMEngine: LocalLLMEngine {
+    private let modelStore: ModelStore
     private let modelID: String
 
-    /// Creates an MLX engine configured for the specified model.
-    /// - Parameter modelID: The Hugging Face model identifier. Defaults to a small quantized instruct model.
-    init(modelID: String = "mlx-community/Llama-3.2-3B-Instruct-4bit") {
-        self.modelID = modelID
+    /// Creates an MLX engine that reads from the active model preference.
+    /// - Parameters:
+    ///   - modelStore: The shared model cache.
+    ///   - modelID: Override model ID. Defaults to `ActiveModelPreference.effectiveModelID()`.
+    init(
+        modelStore: ModelStore = ModelStore(),
+        modelID: String? = nil
+    ) {
+        self.modelStore = modelStore
+        self.modelID = modelID ?? ActiveModelPreference.effectiveModelID()
     }
 
-    /// Parses raw natural-language input into a structured `HabitParseResult` using on-device MLX inference.
-    /// - Parameter rawInput: The user's original text.
-    /// - Returns: A structured parse result extracted from the model output.
     func parse(rawInput: String) async throws -> HabitParseResult {
         #if targetEnvironment(simulator)
         throw MLXLLMEngineError.notAvailableOnSimulator
         #else
-        // Load the model container on first use. In production this should be
-        // cached and managed by a dedicated ModelManager actor.
-        let modelContainer = try await #huggingFaceLoadModelContainer(
-            configuration: ModelConfiguration(id: modelID)
-        )
+        let modelContainer = try await modelStore.container(for: modelID)
 
         let stream = try await modelContainer.perform { context in
             let userInput = UserInput(messages: [

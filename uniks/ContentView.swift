@@ -148,6 +148,12 @@ struct ContentView: View {
                     }
                     .accessibilityLabel("Log new event")
                 }
+                ToolbarItem(placement: .navigation) {
+                    UEngineStatusBadge(
+                        modelName: iOSActiveModelName,
+                        status: iOSEngineStatus
+                    )
+                }
             }
             #endif
         }
@@ -169,6 +175,24 @@ struct ContentView: View {
         }
         #endif
     }
+
+    // MARK: - Engine Status (iOS)
+
+    #if os(iOS)
+    private var iOSActiveModelName: String {
+        let modelID = ActiveModelPreference.effectiveModelID()
+        return LocalModel.allModels.first(where: { $0.id == modelID })?.name ?? "Mock"
+    }
+
+    private var iOSEngineStatus: UEngineStatusBadge.EngineStatusState {
+        let pref = EnginePreference.current()
+        switch pref {
+        case .mlx: return .ready
+        case .ollama: return .ready
+        case .mock: return .mock
+        }
+    }
+    #endif
 }
 
 #if os(iOS)

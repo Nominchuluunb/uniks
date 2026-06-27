@@ -62,6 +62,13 @@ struct DailyActivity: Identifiable, Equatable {
     let count: Int
 }
 
+/// A computed insight about the user's habits.
+struct HabitInsight: Identifiable, Equatable {
+    let id = UUID()
+    let icon: String
+    let text: String
+}
+
 @MainActor
 @Observable
 final class DashboardViewModel {
@@ -75,6 +82,10 @@ final class DashboardViewModel {
     private(set) var dailyValues: [DailyValue] = []
     private(set) var topTags: [TagCount] = []
     private(set) var dailyActivity: [DailyActivity] = []
+    private(set) var totalEvents: Int = 0
+    private(set) var currentStreak: Int = 0
+    private(set) var topCategory: String?
+    private(set) var insights: [HabitInsight] = []
 
     private let container: ModelContainer
 
@@ -126,11 +137,25 @@ final class DashboardViewModel {
             from: dayBuckets, calendar: calendar, range: range
         )
 
+        let newTotalEvents = filtered.count
+        let newCurrentStreak = computeStreak(from: dayBuckets, calendar: calendar)
+        let newTopCategory = newCategoryTotals.first?.category
+        let newInsights = computeInsights(
+            totalEvents: newTotalEvents,
+            streak: newCurrentStreak,
+            topCategory: newTopCategory,
+            topTags: newTopTags
+        )
+
         await MainActor.run {
             self.categoryTotals = newCategoryTotals
             self.dailyValues = newDailyValues
             self.topTags = newTopTags
             self.dailyActivity = newDailyActivity
+            self.totalEvents = newTotalEvents
+            self.currentStreak = newCurrentStreak
+            self.topCategory = newTopCategory
+            self.insights = newInsights
         }
     }
 
@@ -213,5 +238,49 @@ final class DashboardViewModel {
             current = next
         }
         return dates
+    }
+
+    /// Computes the current consecutive-day logging streak ending today.
+    private func computeStreak(
+        from dayBuckets: [Date: [(date: Date, payload: HabitParseResult)]],
+        calendar: Calendar
+    ) -> Int {
+        var streak = 0
+        var day = calendar.startOfDay(for: Date())
+        while dayBuckets[day] != nil {
+            streak += 1
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+            day = prev
+        }
+        return streak
+    }
+
+    /// Generates simple human-readable insights.
+    private func computeInsights(
+        totalEvents: Int,
+        streak: Int,
+        topCategory: String?,
+        topTags: [TagCount]
+    ) -> [HabitInsight] {
+        var results: [HabitInsight] = []
+        if streak >= 3 {
+            results.append(HabitInsight(
+                icon: "flame.fill",
+                text: "You're on a \(streak)-day streak! Keep it up."
+            ))
+        }
+        if let top = topCategory {
+            results.append(HabitInsight(
+                icon: "star.fill",
+                text: "Your most-logged category is \(top)."
+            ))
+        }
+        if let tag = topTags.first, tag.count >= 3 {
+            results.append(HabitInsight(
+                icon: "tag.fill",
+                text: "#\(tag.tag) appears in \(tag.count) events."
+            ))
+        }
+        return results
     }
 }

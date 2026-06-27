@@ -2,14 +2,13 @@
 //  QuickInputView.swift
 //  uniks
 //
-//  Shared input bar for quickly logging events.
+//  Whisper Flow-inspired input bar with engine status and inline parse preview.
 //
 
 import SwiftUI
 
 struct QuickInputView: View {
     @State private var viewModel: QuickInputViewModel
-    @Environment(\.colorScheme) private var colorScheme
     @FocusState private var isFocused: Bool
 
     init(viewModel: QuickInputViewModel) {
@@ -18,6 +17,17 @@ struct QuickInputView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Engine status badge
+            HStack {
+                UEngineStatusBadge(
+                    modelName: viewModel.activeModelName,
+                    status: viewModel.engineStatus
+                )
+                Spacer()
+            }
+            .padding(.bottom, .spacing(.xSmall))
+
+            // Input row
             HStack(alignment: .top, spacing: .spacing(.small)) {
                 Image(systemName: Icons.sparkle)
                     .font(.uInput)
@@ -37,18 +47,36 @@ struct QuickInputView: View {
                         #endif
                     }
             }
-            .onAppear {
-                isFocused = true
-            }
+            .onAppear { isFocused = true }
             #if os(macOS)
             .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
                 isFocused = true
             }
             #endif
 
+            // Inline parsed preview (appears after successful save)
+            if let preview = viewModel.lastParsedPreview {
+                Divider()
+                    .padding(.vertical, .spacing(.xxSmall))
+                HStack(spacing: .spacing(.xSmall)) {
+                    Image(systemName: Icons.success)
+                        .font(.uCaption)
+                        .foregroundStyle(Color.positive)
+                    if let category = preview.category {
+                        UChip(text: category, style: .category)
+                    }
+                    if let value = preview.value, let unit = preview.unit {
+                        UChip(text: "\(value) \(unit)", style: .value)
+                    }
+                    Spacer()
+                }
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+
             Divider()
                 .padding(.vertical, .spacing(.xSmall))
 
+            // Footer
             HStack {
                 if let errorMessage = viewModel.errorMessage {
                     HStack(spacing: .spacing(.xxSmall)) {

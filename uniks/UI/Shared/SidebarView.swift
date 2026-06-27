@@ -145,28 +145,15 @@ struct SidebarView: View {
 
             Divider()
 
-            // Bottom status area
+            // Engine status (deep-links to Settings > Models)
             Button {
                 selection = .settings
             } label: {
-                HStack(spacing: .spacing(.small)) {
-                    Image(systemName: Icons.sparkles)
-                        .font(.uBody)
-                        .foregroundStyle(Color.brandBlue)
-                        .padding(.spacing(.xxSmall))
-                        .background(Color.brandBlueGlowMedium, in: Circle())
-
-                    VStack(alignment: .leading, spacing: .spacing(.xxxSmall)) {
-                        Text("Local, offline intelligence")
-                            .font(.uMicroBold)
-                            .foregroundStyle(Color.primaryLabel)
-                        Text("powered by Gemma")
-                            .font(.uTiny)
-                            .foregroundStyle(Color.secondaryLabel)
-                    }
-
-                    Spacer()
-                }
+                UEngineStatusBadge(
+                    modelName: activeModelName,
+                    status: engineStatusState
+                )
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.spacing(.small))
                 .background(
                     RoundedRectangle(cornerRadius: .radius(.medium))
@@ -184,6 +171,20 @@ struct SidebarView: View {
     }
 
     // MARK: - Computed Properties & Helpers
+
+    private var activeModelName: String {
+        let modelID = ActiveModelPreference.effectiveModelID()
+        return LocalModel.allModels.first(where: { $0.id == modelID })?.name ?? "Mock"
+    }
+
+    private var engineStatusState: UEngineStatusBadge.EngineStatusState {
+        let pref = EnginePreference.current()
+        switch pref {
+        case .mlx: return .ready
+        case .ollama: return .ready
+        case .mock: return .mock
+        }
+    }
 
     private var inboxCount: Int {
         events.filter { $0.state == .pending }.count

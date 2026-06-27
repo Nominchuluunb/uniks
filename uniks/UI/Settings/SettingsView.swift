@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  uniks
 //
-//  User settings for engine selection, local model downloads, and app info.
+//  User settings for engine selection, local model management, and app info.
 //
 
 import SwiftUI
@@ -21,7 +21,7 @@ struct SettingsView: View {
     @State private var preference: EnginePreference = .current()
     @State private var modelManager = LocalModelManager()
     @State private var statuses: [String: LocalModelStatus] = [:]
-    @State private var errorMessage: String?
+    @State private var activeModelID: String? = ActiveModelPreference.current()
 
     init(activeTab: SettingsTab? = nil) {
         self.activeTab = activeTab
@@ -46,9 +46,7 @@ extension SettingsView {
             }
             .navigationTitle("Settings")
         }
-        .task {
-            await refreshStatuses()
-        }
+        .task { await refreshStatuses() }
     }
 
     private var macOSBody: some View {
@@ -65,9 +63,7 @@ extension SettingsView {
             }
             .navigationTitle(navigationTitle)
         }
-        .task {
-            await refreshStatuses()
-        }
+        .task { await refreshStatuses() }
     }
 
     private var navigationTitle: String {
@@ -77,6 +73,8 @@ extension SettingsView {
         case .privacy: "Privacy & About"
         }
     }
+
+    // MARK: - Engine Section
 
     private var engineSection: some View {
         Section {
@@ -96,43 +94,45 @@ extension SettingsView {
                 .foregroundStyle(Color.secondaryLabel)
             #endif
         } header: {
-            HStack(spacing: .spacing(.xSmall)) {
-                Image(systemName: Icons.engine)
-                Text("AI Engine Preference")
-            }
+            USectionHeader(icon: Icons.engine, title: "AI Engine Preference")
         }
     }
+
+    // MARK: - Models Section
 
     private var modelsSection: some View {
         Section {
             ForEach(LocalModel.allModels) { model in
-                LocalModelRow(
+                UModelCard(
                     model: model,
-                    status: statuses[model.id] ?? .notDownloaded
-                ) {
-                    Task {
-                        await download(model)
-                    }
-                }
-            }
-
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.uCaption)
-                    .foregroundStyle(Color.negative)
+                    status: statuses[model.id] ?? .notDownloaded,
+                    isActive: activeModelID == model.id
+                        || (activeModelID == nil && model.isDefault),
+                    onDownload: { startDownload(model) },
+                    onCancel: { cancelDownload(model) },
+                    onDelete: { deleteModel(model) },
+                    onRetry: { startDownload(model) },
+                    onActivate: { activateModel(model) }
+                )
+                .listRowInsets(EdgeInsets(
+                    top: .spacing(.xSmall),
+                    leading: .spacing(.xSmall),
+                    bottom: .spacing(.xSmall),
+                    trailing: .spacing(.xSmall)
+                ))
+                .listRowSeparator(.hidden)
             }
         } header: {
-            HStack(spacing: .spacing(.xSmall)) {
-                Image(systemName: Icons.model)
-                Text("Local MLX Models")
-            }
+            USectionHeader(icon: Icons.model, title: "Local Gemma Models")
         } footer: {
             Text(
-                "Quantized Llama models run entirely on-device for secure NLP processing. " +
-                "Models are downloaded from Hugging Face on first use."
+                "Gemma models run entirely on-device for private NLP parsing. " +
+                "Models are downloaded from Hugging Face on first use. No personal data is sent."
             )
         }
     }
+
+    // MARK: - Privacy Section
 
     private var privacySection: some View {
         Section {
@@ -141,7 +141,7 @@ extension SettingsView {
                     "Uniks is built local-first. Your personal event history, habits, " +
                     "and AI parsing logs are processed and stored exclusively on your " +
                     "physical device. We collect zero telemetry, zero analytics, " +
-                    "and zero personal information. On-device models are downloaded from Hugging Face."
+                    "and zero personal information."
                 )
                 .font(.uFootnote)
                 .foregroundStyle(Color.secondaryLabel)
@@ -160,21 +160,47 @@ extension SettingsView {
             }
             .padding(.vertical, .spacing(.xxSmall))
         } header: {
-            HStack(spacing: .spacing(.xSmall)) {
-                Image(systemName: Icons.privacy)
-                Text("Privacy & About")
-            }
+            USectionHeader(icon: Icons.privacy, title: "Privacy & About")
         }
     }
+
+    // MARK: - Actions
 
     private func refreshStatuses() async {
         await modelManager.refreshStatuses()
         statuses = await modelManager.statuses
+        activeModelID = ActiveModelPreference.current()
     }
 
-    private func download(_ model: LocalModel) async {
-        statuses[model.id] = .downloading
-        await modelManager.download(model)
-        statuses = await modelManager.statuses
+    private func startDownload(_ model: LocalModel) {
+        let stream = Task { await modelManager.download(model) }
+        Task {
+            let progressStream = await stream.value
+            for await progress in progressStream {
+                statuses[model.id] = .downloading(progress)
+            }
+            statuses = await modelManager.statuses
+            activeModelID = ActiveModelPreference.current()
+        }
+    }
+
+    private func cancelDownload(_ model: LocalModel) {
+        Task {
+            await modelManager.cancelDownload(model)
+            statuses = await modelManager.statuses
+        }
+    }
+
+    private func deleteModel(_ model: LocalModel) {
+        Task {
+            await modelManager.deleteModel(model)
+            statuses = await modelManager.statuses
+            activeModelID = ActiveModelPreference.current()
+        }
+    }
+
+    private func activateModel(_ model: LocalModel) {
+        ActiveModelPreference.setActive(model.id)
+        activeModelID = model.id
     }
 }

@@ -16,6 +16,7 @@ struct UniksApp: App {
     private let container: ModelContainer
     private let ftsService: any FTSServiceProtocol
     private let service: HabitEventService
+    private let modelStore: ModelStore
 
     #if os(macOS)
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
@@ -30,8 +31,11 @@ struct UniksApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
 
+        let modelStore = ModelStore()
+        self.modelStore = modelStore
+
         let preference = EnginePreference.current()
-        let engine = EngineResolver.preferredEngine(for: preference)
+        let engine = EngineResolver.preferredEngine(for: preference, modelStore: modelStore)
 
         let ftsService: any FTSServiceProtocol
         do {
@@ -68,6 +72,13 @@ struct UniksApp: App {
         self.panelManager = panelManager
         self.appDelegate.panelManager = panelManager
         #endif
+
+        // Warm up the active model in the background if MLX is preferred
+        if preference == .mlx {
+            Task {
+                await modelStore.warmUp(ActiveModelPreference.effectiveModelID())
+            }
+        }
     }
 
     var body: some Scene {

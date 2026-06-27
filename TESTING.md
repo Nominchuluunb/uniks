@@ -37,14 +37,14 @@ See [`docs/OPERATIONS.md`](docs/OPERATIONS.md) for more commands.
 
 ```
 uniksTests/
-├── DashboardViewModelTests.swift   # Dashboard aggregation logic
+├── DashboardViewModelTests.swift   # Dashboard aggregation, streaks, and insights logic
 ├── DesignSystemTests.swift         # Token and component sanity tests
 ├── EngineResolverTests.swift       # Engine selection fallback logic
 ├── FTSServiceTests.swift           # Full-text indexing and search
 ├── HabitEventServiceTests.swift    # Optimistic save/update/delete
 ├── HabitEventTests.swift           # Model encode/decode and state tests
 ├── HabitParseResultTests.swift     # Parse result encoding/decoding
-├── LocalModelManagerTests.swift    # Model cache status
+├── LocalModelManagerTests.swift    # Model catalog, status, cache, download, cancel, delete
 ├── MLXLLMEngineTests.swift         # MLX engine configuration
 ├── OllamaLLMEngineTests.swift      # Ollama request/response handling
 └── ParsingActorTests.swift         # State transition and parsing tests
@@ -70,6 +70,44 @@ enum MockError: Error {
     case intentional
 }
 ```
+
+## Mocking the Model Downloader
+
+```swift
+import Testing
+@testable import uniks
+
+struct MockModelDownloader: ModelDownloaderProtocol {
+    var simulatedProgress: [Double] = [0.25, 0.5, 0.75, 1.0]
+    var shouldFail: Bool = false
+
+    func download(_ model: LocalModel, progressHandler: @Sendable (Double) -> Void) async throws {
+        for value in simulatedProgress {
+            if shouldFail && value > 0.5 { throw MockError.intentional }
+            progressHandler(value)
+        }
+    }
+}
+```
+
+Use `MockModelDownloader` to test the full `LocalModelManager` download pipeline — progress streaming, cancellation, error handling, and retry — without network access or disk usage.
+
+## Testing Download Pipeline (LocalModelManagerTests)
+
+`LocalModelManagerTests` covers:
+- **Catalog integrity** — verifies all bundled model definitions have valid IDs and metadata.
+- **Status display text** — asserts human-readable status strings for each `LocalModelStatus`.
+- **Cache detection** — checks that previously downloaded models are detected on disk.
+- **Download progress streaming** — injects `MockModelDownloader` and verifies `AsyncStream<Double>` emits expected values.
+- **Error handling** — simulates download failure and verifies graceful error state transition.
+- **Cancel** — triggers cancellation mid-download and verifies the manager stops cleanly.
+- **Delete** — verifies model removal from cache and status reset.
+
+## Testing Dashboard Streaks and Insights
+
+`DashboardViewModelTests` includes:
+- **Streak computation** — verifies current streak calculation from consecutive daily events.
+- **Insight generation** — tests that the view model produces correct top-category and trend insights from parsed event data.
 
 ## Testing SwiftData State Transitions
 

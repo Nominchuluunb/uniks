@@ -2,7 +2,7 @@
 //  OnboardingView.swift
 //  uniks
 //
-//  First-launch onboarding explaining the capture flow and privacy promise.
+//  First-launch onboarding with real Gemma model download.
 //
 
 import SwiftUI
@@ -11,122 +11,146 @@ import SwiftUI
 struct OnboardingView: View {
     @Binding var isPresented: Bool
     @State private var currentPage = 0
-    @State private var downloadProgress = 0.0
-    @State private var isDownloading = false
     @State private var modelManager = LocalModelManager()
+    @State private var downloadProgress: ModelDownloadProgress?
+    @State private var downloadStatus: LocalModelStatus = .notDownloaded
+    @State private var downloadError: String?
 
     static let completedKey = "uniks.hasCompletedOnboarding"
 
     var body: some View {
         ZStack {
             MeshBackground()
-            
+
             VStack(alignment: .leading, spacing: 0) {
-                // Header (Logo or Back button)
-                HStack {
-                    if currentPage > 0 {
-                        Button {
-                            withAnimation {
-                                if currentPage == 2 && isDownloading {
-                                    isDownloading = false
-                                    downloadProgress = 0.0
-                                }
-                                currentPage -= 1
-                            }
-                        } label: {
-                            HStack(spacing: .spacing(.xSmall)) {
-                                Image(systemName: Icons.chevronLeft)
-                                Text("Back")
-                            }
-                            .font(.uCallout)
-                            .foregroundStyle(Color.secondaryLabel)
-                        }
-                        .buttonStyle(.plain)
-                        .interactiveScale()
-                    } else {
-                        UniksLogoHeader()
-                    }
-                    
-                    Spacer()
-                    
-                    if currentPage > 0 {
-                        // Slide progress indicator
-                        HStack(spacing: .spacing(.xxSmall)) {
-                            Capsule()
-                                .fill(currentPage == 1 ? Color.accent : Color.secondaryLabelFaint)
-                                .frame(width: currentPage == 1 ? 24 : 8, height: 6)
-                            Capsule()
-                                .fill(currentPage == 2 ? Color.accent : Color.secondaryLabelFaint)
-                                .frame(width: currentPage == 2 ? 24 : 8, height: 6)
-                        }
-                    }
-                }
-                .padding(.horizontal, .spacing(.large))
-                .padding(.top, .spacing(.large))
-                
+                headerBar
                 Spacer()
-                
-                // Content Views
-                Group {
-                    switch currentPage {
-                    case 0:
-                        WelcomeStage(currentPage: $currentPage)
-                    case 1:
-                        SetupStage(currentPage: $currentPage, onDownload: {
-                            withAnimation {
-                                currentPage = 2
-                                startDownloadProgress()
-                            }
-                        })
-                    case 2:
-                        ProgressStage(
-                            downloadProgress: downloadProgress,
-                            downloadedMBText: downloadedMBText
-                        )
-                    default:
-                        EmptyView()
-                    }
-                }
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .move(edge: .trailing)),
-                    removal: .opacity.combined(with: .move(edge: .leading))
-                ))
-                
+                content
                 Spacer()
             }
         }
         // swiftlint:disable:next hardcoded_frame_size
         .frame(width: 720, height: 520)
+        .task { await checkIfAlreadyDownloaded() }
     }
-    
-    // MARK: - Simulated Download Progress
-    
-    private var downloadedMBText: String {
-        let current = 2735.2 * downloadProgress
-        return String(format: "%.1f MB / 2735.2 MB", current)
-    }
-    
-    private func startDownloadProgress() {
-        isDownloading = true
-        downloadProgress = 0.0
 
-        // Start actual local model manager download in the background
-        Task {
-            if let model = LocalModel.allModels.first {
-                await modelManager.download(model)
+    // MARK: - Header
+
+    private var headerBar: some View {
+        HStack {
+            if currentPage > 0 {
+                Button {
+                    withAnimation { goBack() }
+                } label: {
+                    HStack(spacing: .spacing(.xSmall)) {
+                        Image(systemName: Icons.chevronLeft)
+                        Text("Back")
+                    }
+                    .font(.uCallout)
+                    .foregroundStyle(Color.secondaryLabel)
+                }
+                .buttonStyle(.plain)
+                .interactiveScale()
+            } else {
+                UniksLogoHeader()
+            }
+
+            Spacer()
+
+            if currentPage > 0 {
+                HStack(spacing: .spacing(.xxSmall)) {
+                    Capsule()
+                        .fill(currentPage == 1 ? Color.accent : Color.secondaryLabelFaint)
+                        .frame(width: currentPage == 1 ? 24 : 8, height: 6)
+                    Capsule()
+                        .fill(currentPage == 2 ? Color.accent : Color.secondaryLabelFaint)
+                        .frame(width: currentPage == 2 ? 24 : 8, height: 6)
+                }
             }
         }
+        .padding(.horizontal, .spacing(.large))
+        .padding(.top, .spacing(.large))
+    }
 
-        // Animate simulated progress using structured concurrency
-        Task {
-            while isDownloading && downloadProgress < 1.0 {
-                try? await Task.sleep(for: .milliseconds(80))
-                downloadProgress += 0.01
+    // MARK: - Content
+
+    @ViewBuilder
+    private var content: some View {
+        Group {
+            switch currentPage {
+            case 0:
+                WelcomeStage(currentPage: $currentPage)
+            case 1:
+                SetupStage(currentPage: $currentPage, onDownload: { startRealDownload() })
+            case 2:
+                ProgressStage(
+                    progress: downloadProgress,
+                    status: downloadStatus,
+                    error: downloadError,
+                    onRetry: { startRealDownload() },
+                    onSkip: { completeOnboarding(skipped: true) }
+                )
+            default:
+                EmptyView()
             }
-            isDownloading = false
-            UserDefaults.standard.set(true, forKey: Self.completedKey)
-            isPresented = false
         }
+        .transition(.asymmetric(
+            insertion: .opacity.combined(with: .move(edge: .trailing)),
+            removal: .opacity.combined(with: .move(edge: .leading))
+        ))
+        .padding(.horizontal, .spacing(.large))
+    }
+
+    // MARK: - Logic
+
+    private func goBack() {
+        if currentPage == 2 {
+            Task { await modelManager.cancelDownload(LocalModel.defaultModel) }
+            downloadProgress = nil
+            downloadError = nil
+            downloadStatus = .notDownloaded
+        }
+        currentPage -= 1
+    }
+
+    private func checkIfAlreadyDownloaded() async {
+        await modelManager.refreshStatuses()
+        let status = await modelManager.statuses[LocalModel.defaultModel.id]
+        if case .downloaded = status {
+            // Already downloaded — skip to completion
+            completeOnboarding(skipped: false)
+        }
+    }
+
+    private func startRealDownload() {
+        withAnimation { currentPage = 2 }
+        downloadError = nil
+        downloadStatus = .queued
+
+        Task {
+            let stream = await modelManager.download(LocalModel.defaultModel)
+            for await progress in stream {
+                downloadProgress = progress
+                downloadStatus = .downloading(progress)
+            }
+            // Stream finished — check final status
+            let finalStatus = await modelManager.statuses[LocalModel.defaultModel.id]
+            downloadStatus = finalStatus ?? .notDownloaded
+            if case .downloaded = finalStatus {
+                completeOnboarding(skipped: false)
+            } else if case .failed(let msg) = finalStatus {
+                downloadError = msg
+            }
+        }
+    }
+
+    private func completeOnboarding(skipped: Bool) {
+        if skipped {
+            // Set engine to mock so the user isn't stuck without a parser
+            EnginePreference.mock.save()
+        }
+        UserDefaults.standard.set(true, forKey: Self.completedKey)
+        isPresented = false
     }
 }
 

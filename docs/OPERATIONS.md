@@ -92,6 +92,17 @@ See [`docs/screenshots/README.md`](screenshots/README.md) for details.
 | Link failure with `yyjson` / profiling | Code coverage instrumentation | Add `-enableCodeCoverage NO`. |
 | Simulator uses Mock engine | MLX requires Metal GPU | Expected; use a physical device for real MLX inference. |
 
+## Disk-space requirements for on-device models
+
+The Gemma model download requires available disk space on the device:
+
+| Model | Approximate Size |
+|-------|-----------------|
+| Gemma 3 1B QAT 4-bit (default) | ~0.6 GB |
+| Gemma 2 2B (quality option) | ~1.5 GB |
+
+`LocalModelManager` performs a disk-space preflight check before starting a download and reports an error if insufficient space is available.
+
 ## Release checklist
 
 - [ ] All tests pass on macOS.

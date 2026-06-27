@@ -30,6 +30,52 @@ struct DashboardView: View {
                     .padding(.horizontal, .spacing(.medium))
 
                     if hasData {
+                        // Hero stat row
+                        HStack(spacing: .spacing(.small)) {
+                            UStatBox(
+                                icon: "calendar",
+                                value: "\(viewModel.totalEvents)",
+                                label: "Total Events",
+                                trend: viewModel.totalEvents > 0 ? .up : .neutral
+                            )
+                            UStatBox(
+                                icon: "flame.fill",
+                                value: viewModel.currentStreak > 0
+                                    ? "\(viewModel.currentStreak) day\(viewModel.currentStreak == 1 ? "" : "s")"
+                                    : "—",
+                                label: "Current Streak",
+                                trend: viewModel.currentStreak >= 3 ? .up : .neutral,
+                                tint: .warning
+                            )
+                            UStatBox(
+                                icon: "star.fill",
+                                value: viewModel.topCategory ?? "—",
+                                label: "Top Category",
+                                tint: .brandPurple
+                            )
+                        }
+                        .padding(.horizontal, .spacing(.medium))
+
+                        // Insights
+                        if !viewModel.insights.isEmpty {
+                            VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
+                                ForEach(viewModel.insights) { insight in
+                                    HStack(spacing: .spacing(.xSmall)) {
+                                        Image(systemName: insight.icon)
+                                            .font(.uCaption)
+                                            .foregroundStyle(Color.accent)
+                                        Text(insight.text)
+                                            .font(.uCallout)
+                                            .foregroundStyle(Color.secondaryLabel)
+                                    }
+                                }
+                            }
+                            .padding(.spacing(.medium))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.accentSubtle, in: RoundedRectangle(cornerRadius: .radius(.medium)))
+                            .padding(.horizontal, .spacing(.medium))
+                        }
+
                         CategoryTotalsCard(totals: viewModel.categoryTotals)
                             .padding(.horizontal, .spacing(.medium))
                         
