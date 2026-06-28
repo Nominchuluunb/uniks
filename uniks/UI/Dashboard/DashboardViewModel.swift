@@ -90,12 +90,13 @@ final class DashboardViewModel {
     private(set) var weeklyDigest: WeeklyDigest?
 
     private let container: ModelContainer
-    private lazy var goalService = GoalService(container: container)
+    private let goalService: GoalService
 
     var modelContainer: ModelContainer { container }
 
     init(container: ModelContainer) {
         self.container = container
+        self.goalService = GoalService(container: container)
     }
 
     /// Recomputes all dashboard aggregations from the current date range.

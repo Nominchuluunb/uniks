@@ -40,7 +40,7 @@ enum NaturalTimeParser {
 
     // MARK: - Patterns
 
-    private static let patterns: [(String, (String, Date, Calendar) -> Date?)] = [
+    private static let patterns: [(String, @Sendable (String, Date, Calendar) -> Date?)] = [
         ("yesterday( morning| afternoon| evening| night)?", resolveYesterday),
         ("this morning", resolveThisMorning),
         ("this afternoon", resolveThisAfternoon),

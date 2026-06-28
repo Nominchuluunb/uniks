@@ -8,10 +8,22 @@
 import Foundation
 import SwiftData
 
+/// Sendable snapshot of Goal data.
+struct GoalSnapshot: Identifiable, Sendable {
+    let id: UUID
+    let category: String
+    let targetCount: Int
+    let frequency: GoalFrequency
+    let emoji: String
+    let isActive: Bool
+
+    var goalFrequency: GoalFrequency { frequency }
+}
+
 /// Progress snapshot for a single goal.
 struct GoalProgress: Identifiable, Sendable {
     let id: UUID
-    let goal: Goal
+    let goal: GoalSnapshot
     let currentCount: Int
     var fractionCompleted: Double {
         guard goal.targetCount > 0 else { return 0 }
@@ -45,17 +57,29 @@ actor GoalService {
         let calendar = Calendar.current
         let now = Date()
 
-        return goals.map { goal in
+        var results: [GoalProgress] = []
+        for goal in goals {
             let periodStart = periodStartDate(for: goal.goalFrequency, now: now, calendar: calendar)
-            let count = events.filter { event in
+            var count = 0
+            for event in events {
                 guard event.state == .parsed,
                       event.createdAt >= periodStart,
                       let payload = event.parsedPayload(),
-                      let cat = payload.category?.lowercased() else { return false }
-                return cat == goal.category.lowercased()
-            }.count
-            return GoalProgress(id: goal.id, goal: goal, currentCount: count)
+                      let cat = payload.category?.lowercased(),
+                      cat == goal.category.lowercased() else { continue }
+                count += 1
+            }
+            let snapshot = GoalSnapshot(
+                id: goal.id,
+                category: goal.category,
+                targetCount: goal.targetCount,
+                frequency: goal.goalFrequency,
+                emoji: goal.emoji,
+                isActive: goal.isActive
+            )
+            results.append(GoalProgress(id: goal.id, goal: snapshot, currentCount: count))
         }
+        return results
     }
 
     private func periodStartDate(for frequency: GoalFrequency, now: Date, calendar: Calendar) -> Date {
