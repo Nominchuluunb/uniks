@@ -8,6 +8,11 @@
 import Foundation
 import SwiftData
 
+/// Errors specific to the parsing pipeline.
+enum ParsingError: Error, Sendable {
+    case timeout
+}
+
 /// Protocol abstraction for background parsing actors so services can depend on
 /// a capability rather than a concrete type.
 protocol ParsingActorProtocol: Sendable {
@@ -49,8 +54,22 @@ actor ParsingActor: ParsingActorProtocol {
             return
         }
 
+        let rawInput = event.rawInput
+        let engine = self.engine
+
         do {
-            let result = try await self.engine.parse(rawInput: event.rawInput)
+            let result = try await withThrowingTaskGroup(of: HabitParseResult.self) { group in
+                group.addTask {
+                    try await engine.parse(rawInput: rawInput)
+                }
+                group.addTask {
+                    try await Task.sleep(for: .seconds(60))
+                    throw ParsingError.timeout
+                }
+                let first = try await group.next()!
+                group.cancelAll()
+                return first
+            }
             event.setParsedPayload(result)
         } catch {
             event.state = .failed
