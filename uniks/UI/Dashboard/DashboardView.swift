@@ -12,6 +12,7 @@ import Charts
 @MainActor
 struct DashboardView: View {
     @State private var viewModel: DashboardViewModel
+    @State private var showingAddGoal = false
 
     init(viewModel: DashboardViewModel) {
         self.viewModel = viewModel
@@ -56,6 +57,13 @@ struct DashboardView: View {
                         }
                         .padding(.horizontal, .spacing(.medium))
 
+                        // Goals Progress
+                        GoalsCard(
+                            progress: viewModel.goalProgress,
+                            onAdd: { showingAddGoal = true }
+                        )
+                        .padding(.horizontal, .spacing(.medium))
+
                         // Weekly Heatmap
                         WeeklyHeatmapCard(activity: viewModel.dailyActivity)
                             .padding(.horizontal, .spacing(.medium))
@@ -83,6 +91,12 @@ struct DashboardView: View {
                         // Category sparklines
                         CategorySparklineCard(totals: viewModel.categoryTotals, dailyValues: viewModel.dailyValues)
                             .padding(.horizontal, .spacing(.medium))
+
+                        // Weekly Digest
+                        if let digest = viewModel.weeklyDigest {
+                            WeeklyDigestCard(digest: digest)
+                                .padding(.horizontal, .spacing(.medium))
+                        }
                         
                         DailyValuesCard(values: viewModel.dailyValues)
                             .padding(.horizontal, .spacing(.medium))
@@ -110,6 +124,9 @@ struct DashboardView: View {
         }
         .task {
             await viewModel.refresh()
+        }
+        .sheet(isPresented: $showingAddGoal) {
+            AddGoalSheet(container: viewModel.modelContainer)
         }
     }
 

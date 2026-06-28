@@ -86,8 +86,13 @@ final class DashboardViewModel {
     private(set) var currentStreak: Int = 0
     private(set) var topCategory: String?
     private(set) var insights: [HabitInsight] = []
+    private(set) var goalProgress: [GoalProgress] = []
+    private(set) var weeklyDigest: WeeklyDigest?
 
     private let container: ModelContainer
+    private lazy var goalService = GoalService(container: container)
+
+    var modelContainer: ModelContainer { container }
 
     init(container: ModelContainer) {
         self.container = container
@@ -157,6 +162,14 @@ final class DashboardViewModel {
             self.topCategory = newTopCategory
             self.insights = newInsights
         }
+
+        // Refresh goals
+        if let progress = try? await goalService.allProgress() {
+            await MainActor.run { self.goalProgress = progress }
+        }
+
+        // Weekly digest
+        await MainActor.run { self.weeklyDigest = computeWeeklyDigest(container: container) }
     }
 
     private func aggregateCategoryTotals(
@@ -255,7 +268,7 @@ final class DashboardViewModel {
         return streak
     }
 
-    /// Generates simple human-readable insights.
+    /// Generates human-readable insights including time-of-day patterns.
     private func computeInsights(
         totalEvents: Int,
         streak: Int,
@@ -281,6 +294,58 @@ final class DashboardViewModel {
                 text: "#\(tag.tag) appears in \(tag.count) events."
             ))
         }
+
+        // Time-of-day pattern detection
+        if let pattern = detectTimePattern() {
+            results.append(pattern)
+        }
+
         return results
+    }
+
+    /// Detects the most common time-of-day for logging per top category.
+    private func detectTimePattern() -> HabitInsight? {
+        let context = ModelContext(container)
+        let descriptor = FetchDescriptor<HabitEvent>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        guard let events = try? context.fetch(descriptor) else { return nil }
+
+        let calendar = Calendar.current
+        var categoryHours: [String: [Int]] = [:]
+
+        for event in events.prefix(100) {
+            guard event.state == .parsed,
+                  let cat = event.parsedPayload()?.category else { continue }
+            let hour = calendar.component(.hour, from: event.createdAt)
+            categoryHours[cat, default: []].append(hour)
+        }
+
+        // Find the category with the strongest time bias
+        var bestCategory: String?
+        var bestTimeOfDay: String?
+        var bestCount = 0
+
+        for (cat, hours) in categoryHours where hours.count >= 5 {
+            let morning = hours.filter { (5..<12).contains($0) }.count
+            let afternoon = hours.filter { (12..<17).contains($0) }.count
+            let evening = hours.filter { (17..<22).contains($0) }.count
+
+            let total = hours.count
+            let pairs: [(String, Int)] = [("mornings", morning), ("afternoons", afternoon), ("evenings", evening)]
+            if let best = pairs.max(by: { $0.1 < $1.1 }),
+               Double(best.1) / Double(total) >= 0.6,
+               best.1 > bestCount {
+                bestCount = best.1
+                bestCategory = cat
+                bestTimeOfDay = best.0
+            }
+        }
+
+        guard let cat = bestCategory, let time = bestTimeOfDay else { return nil }
+        return HabitInsight(
+            icon: "clock.fill",
+            text: "You log \(cat) mostly in the \(time)."
+        )
     }
 }

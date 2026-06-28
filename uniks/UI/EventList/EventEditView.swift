@@ -116,6 +116,21 @@ struct EventEditView: View {
                 Section {
                     HStack(spacing: .spacing(.medium)) {
                         Button {
+                            Task { await duplicateEvent() }
+                        } label: {
+                            Label("Log Again", systemImage: "doc.on.doc")
+                                .font(.uBody)
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding(.spacing(.small))
+                                .background(Color.positiveSubtle, in: Capsule())
+                                .foregroundStyle(Color.positive)
+                        }
+                        .buttonStyle(.plain)
+                        .interactiveScale()
+                        .disabled(isSaving || isDeleting)
+
+                        Button {
                             Task { await retryParsing() }
                         } label: {
                             Label("Retry Parse", systemImage: Icons.retry)
@@ -232,6 +247,15 @@ struct EventEditView: View {
         defer { isDeleting = false }
         do {
             try await service.delete(eventID: event.id)
+            onFinished()
+        } catch {}
+    }
+
+    private func duplicateEvent() async {
+        isSaving = true
+        defer { isSaving = false }
+        do {
+            _ = try await service.duplicate(eventID: event.id)
             onFinished()
         } catch {}
     }

@@ -13,7 +13,7 @@ extension ModelContainer {
     /// - Parameter inMemory: When `true`, uses an in-memory store (useful for previews and tests).
     /// - Returns: A configured `ModelContainer` for `HabitEvent`.
     static func uniksContainer(inMemory: Bool = false) throws -> ModelContainer {
-        let schema = Schema([HabitEvent.self])
+        let schema = Schema([HabitEvent.self, Goal.self])
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: inMemory,

@@ -25,11 +25,21 @@ actor HabitEventService {
     }
 
     /// Saves the raw event, indexes it for search, and triggers background parsing.
+    /// Automatically parses relative time expressions (e.g. "yesterday", "2 hours ago")
+    /// to override the event timestamp.
     /// - Parameter rawInput: The user's original text.
     /// - Returns: The stable identifier of the inserted event.
     func log(rawInput: String) async throws -> UUID {
         let context = ModelContext(self.container)
-        let event = HabitEvent(rawInput: rawInput)
+
+        // Parse natural time references
+        let timeResult = NaturalTimeParser.parse(rawInput)
+        let effectiveInput = timeResult?.cleanedInput ?? rawInput
+
+        let event = HabitEvent(rawInput: effectiveInput)
+        if let resolved = timeResult?.resolvedDate {
+            event.createdAt = resolved
+        }
         context.insert(event)
         try context.save()
 
@@ -38,7 +48,6 @@ actor HabitEventService {
 
         try await self.ftsService.index(eventID: eventID, rawInput: raw)
 
-        // Background parsing must not block the return of the event ID.
         Task {
             await self.parsingActor.parseAndSave(eventID: eventID)
         }
@@ -99,6 +108,21 @@ actor HabitEventService {
         try context.save()
 
         try await self.ftsService.remove(eventID: eventID)
+    }
+
+    /// Duplicates an event with a fresh timestamp and re-parses it.
+    /// - Parameter eventID: The event to duplicate.
+    /// - Returns: The new event's ID.
+    func duplicate(eventID: UUID) async throws -> UUID {
+        let context = ModelContext(self.container)
+        let eventIDValue = eventID
+        let descriptor = FetchDescriptor<HabitEvent>(
+            predicate: #Predicate { $0.id == eventIDValue }
+        )
+        guard let original = try context.fetch(descriptor).first else {
+            throw HabitParseError.decodingFailed
+        }
+        return try await log(rawInput: original.rawInput)
     }
 
     /// Returns the most recently used categories for smart suggestions.
