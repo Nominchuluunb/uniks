@@ -47,6 +47,34 @@ final class RecurringTemplate {
         get { TemplateFrequency(rawValue: frequencyRaw) ?? .daily }
         set { frequencyRaw = newValue.rawValue }
     }
+
+    /// A `Sendable` value snapshot safe to pass across actor boundaries.
+    var snapshot: RecurringTemplateSnapshot {
+        RecurringTemplateSnapshot(
+            id: id,
+            phrase: phrase,
+            emoji: emoji,
+            frequency: frequency,
+            hour: hour,
+            minute: minute,
+            isActive: isActive,
+            notificationEnabled: notificationEnabled
+        )
+    }
+}
+
+/// An immutable, `Sendable` snapshot of a `RecurringTemplate` for use across
+/// actor boundaries (e.g. when scheduling notifications). SwiftData `@Model`
+/// types are not `Sendable`, so the live model must not cross isolation domains.
+struct RecurringTemplateSnapshot: Sendable {
+    let id: UUID
+    let phrase: String
+    let emoji: String
+    let frequency: TemplateFrequency
+    let hour: Int
+    let minute: Int
+    let isActive: Bool
+    let notificationEnabled: Bool
 }
 
 /// Frequency options for recurring templates.

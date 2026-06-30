@@ -338,6 +338,7 @@ private struct WeeklyHeatmapCard: View {
                     }
                     .padding(.top, .spacing(.xxSmall))
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }

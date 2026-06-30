@@ -67,7 +67,8 @@ struct UniksApp: App {
             ftsService: self.ftsService
         )
 
-        self.notificationService = NotificationService(container: self.container)
+        let notificationService = NotificationService(container: self.container)
+        self.notificationService = notificationService
 
         #if os(macOS)
         let viewModel = QuickInputViewModel(service: self.service)
@@ -80,12 +81,16 @@ struct UniksApp: App {
         self.appDelegate.panelManager = panelManager
         #endif
 
-        // Warm up the active model in the background if MLX is preferred
+        // Warm up the active model in the background if MLX is preferred.
+        // MLX requires a Metal GPU and aborts on the simulator, which uses the
+        // mock engine instead — so never warm up there.
+        #if !targetEnvironment(simulator)
         if preference == .mlx {
             Task {
                 await modelStore.warmUp(ActiveModelPreference.effectiveModelID())
             }
         }
+        #endif
 
         // Register notification categories and reschedule
         Task {
@@ -106,8 +111,8 @@ struct UniksApp: App {
                     #endif
                 }
             )
-            .environment(toastManager)
             .toastOverlay()
+            .environment(toastManager)
             .preferredColorScheme(themePreference.colorScheme)
         }
         .modelContainer(self.container)

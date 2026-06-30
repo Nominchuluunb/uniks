@@ -144,12 +144,19 @@ struct QuickInputView: View {
                     Task { await submit() }
                 } label: {
                     if viewModel.isSaving {
-                        ProgressView()
-                            .controlSize(.small)
+                        // Reserve a fixed slot (keeps the button size stable) and
+                        // overlay the spinner at its natural size. Pinning the
+                        // bridged NSProgressIndicator to an exact frame conflicts
+                        // with its intrinsic size (AppKit logs a min/max warning).
+                        Color.clear
                             .frame(
                                 width: .sizing(.saveButtonProgressWidth),
                                 height: .sizing(.saveButtonProgressHeight)
                             )
+                            .overlay {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
                     } else {
                         Text("Save")
                             .font(.uCaption)

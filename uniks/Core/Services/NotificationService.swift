@@ -37,8 +37,8 @@ actor NotificationService {
     }
 
     /// Schedules a notification for a recurring template.
-    /// - Parameter template: The template to schedule notifications for.
-    func schedule(template: RecurringTemplate) async {
+    /// - Parameter template: A `Sendable` snapshot of the template to schedule notifications for.
+    func schedule(template: RecurringTemplateSnapshot) async {
         guard template.isActive && template.notificationEnabled else {
             await removeNotification(for: template.id)
             return
@@ -102,7 +102,7 @@ actor NotificationService {
         notificationCenter.removeAllPendingNotificationRequests()
 
         for template in templates where template.notificationEnabled {
-            await schedule(template: template)
+            await schedule(template: template.snapshot)
         }
     }
 
