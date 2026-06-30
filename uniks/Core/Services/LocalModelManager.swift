@@ -52,8 +52,29 @@ actor LocalModelManager {
         guard let cacheDirectory else { return .notDownloaded }
         let modelCacheURL = cacheDirectory.appendingPathComponent(model.cacheFolderName, isDirectory: true)
         guard fileManager.fileExists(atPath: modelCacheURL.path) else { return .notDownloaded }
+        // A model is only usable once its actual weights are present. A partial
+        // download that fetched only metadata (config/tokenizer JSON, the
+        // `*.safetensors.index.json` manifest) must NOT be reported as ready —
+        // otherwise the engine would try to load a weightless model and stall.
+        guard containsModelWeights(at: modelCacheURL) else { return .notDownloaded }
         let size = directorySize(at: modelCacheURL)
         return size > 0 ? .downloaded(size: size) : .notDownloaded
+    }
+
+    /// Whether the model cache contains at least one `.safetensors` weights file.
+    /// The `*.safetensors.index.json` manifest has a `json` extension and is
+    /// therefore correctly excluded.
+    private func containsModelWeights(at url: URL) -> Bool {
+        guard let enumerator = fileManager.enumerator(
+            at: url,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else { return false }
+
+        for case let fileURL as URL in enumerator where fileURL.pathExtension == "safetensors" {
+            return true
+        }
+        return false
     }
 
     // MARK: - Download

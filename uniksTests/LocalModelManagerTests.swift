@@ -108,7 +108,7 @@ struct LocalModelManagerTests {
         try FileManager.default.createDirectory(at: modelDir, withIntermediateDirectories: true)
 
         let data = Data(repeating: 0, count: 1_024)
-        try data.write(to: modelDir.appendingPathComponent("config.json"))
+        try data.write(to: modelDir.appendingPathComponent("model.safetensors"))
 
         let manager = LocalModelManager(
             downloader: MockModelDownloader(),
@@ -120,6 +120,29 @@ struct LocalModelManagerTests {
         #expect(status == .downloaded(size: 1_024))
     }
 
+    @Test func statusIsNotDownloadedWhenWeightsMissing() async throws {
+        // A partial download that fetched only metadata (no `.safetensors`
+        // weights) must be treated as not downloaded.
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let model = LocalModel.allModels[0]
+        let modelDir = tempDir.appendingPathComponent(model.cacheFolderName, isDirectory: true)
+        try FileManager.default.createDirectory(at: modelDir, withIntermediateDirectories: true)
+
+        try Data(repeating: 0, count: 512).write(to: modelDir.appendingPathComponent("config.json"))
+        try Data(repeating: 0, count: 512)
+            .write(to: modelDir.appendingPathComponent("model.safetensors.index.json"))
+
+        let manager = LocalModelManager(
+            downloader: MockModelDownloader(),
+            cacheDirectoryOverride: tempDir
+        )
+        await manager.refreshStatuses()
+
+        let status = await manager.statuses[model.id]
+        #expect(status == .notDownloaded)
+    }
+
     // MARK: - Download Progress
 
     @Test func downloadEmitsProgressAndCompletes() async throws {
@@ -129,7 +152,7 @@ struct LocalModelManagerTests {
         let model = LocalModel.allModels[0]
         let modelDir = tempDir.appendingPathComponent(model.cacheFolderName, isDirectory: true)
         try FileManager.default.createDirectory(at: modelDir, withIntermediateDirectories: true)
-        try Data(repeating: 0, count: 512).write(to: modelDir.appendingPathComponent("weights.bin"))
+        try Data(repeating: 0, count: 512).write(to: modelDir.appendingPathComponent("model.safetensors"))
 
         let manager = LocalModelManager(
             downloader: MockModelDownloader(progressSteps: [0.0, 0.5, 1.0]),
@@ -198,7 +221,7 @@ struct LocalModelManagerTests {
         let model = LocalModel.allModels[0]
         let modelDir = tempDir.appendingPathComponent(model.cacheFolderName, isDirectory: true)
         try FileManager.default.createDirectory(at: modelDir, withIntermediateDirectories: true)
-        try Data(repeating: 0, count: 100).write(to: modelDir.appendingPathComponent("file.bin"))
+        try Data(repeating: 0, count: 100).write(to: modelDir.appendingPathComponent("model.safetensors"))
 
         let manager = LocalModelManager(
             downloader: MockModelDownloader(),

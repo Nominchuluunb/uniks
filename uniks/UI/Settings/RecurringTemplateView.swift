@@ -120,11 +120,12 @@ private struct TemplateRow: View {
             Toggle("", isOn: $template.isActive)
                 .labelsHidden()
                 .onChange(of: template.isActive) { _, isActive in
+                    let snapshot = template.snapshot
                     Task {
                         if isActive {
-                            await notificationService.schedule(template: template)
+                            await notificationService.schedule(template: snapshot)
                         } else {
-                            await notificationService.removeNotification(for: template.id)
+                            await notificationService.removeNotification(for: snapshot.id)
                         }
                     }
                 }
@@ -244,9 +245,10 @@ private struct CreateTemplateSheet: View {
         try? modelContext.save()
 
         if notificationEnabled {
+            let snapshot = template.snapshot
             Task {
                 await notificationService.requestAuthorization()
-                await notificationService.schedule(template: template)
+                await notificationService.schedule(template: snapshot)
             }
         }
 

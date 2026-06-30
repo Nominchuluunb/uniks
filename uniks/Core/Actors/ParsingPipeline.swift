@@ -131,9 +131,6 @@ actor ParsingPipeline: ParsingActorProtocol {
 
         let rawInput = event.rawInput
 
-        // Get relevant corrections for few-shot injection
-        let corrections = await correctionsStore.relevantCorrections(for: rawInput, limit: 3)
-
         // Retry with exponential backoff: 0s, 2s, 10s
         let retryDelays: [Duration] = [.zero, .seconds(2), .seconds(10)]
 

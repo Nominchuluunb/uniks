@@ -24,6 +24,7 @@ struct GoalsCard: View {
                         UButton("Add Goal", style: .secondary, action: onAdd)
                     }
                 }
+                .frame(maxWidth: .infinity)
             } else {
                 VStack(spacing: .spacing(.medium)) {
                     // Ring charts row

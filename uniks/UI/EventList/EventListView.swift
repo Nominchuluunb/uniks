@@ -44,36 +44,48 @@ struct EventListView: View {
                 } else {
                     #if os(iOS)
                     List {
-                        ForEach(filteredEvents) { event in
-                            EventRowCard(event: event)
-                                .onTapGesture {
-                                    selectedEvent = event
-                                }
-                                .listRowInsets(EdgeInsets(
-                                    top: .spacing(.xSmall),
-                                    leading: .spacing(.medium),
-                                    bottom: .spacing(.xSmall),
-                                    trailing: .spacing(.medium)
-                                ))
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(Color.clear)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        Task { try? await viewModel.service.delete(eventID: event.id) }
-                                    } label: {
-                                        Label("Delete", systemImage: Icons.trash)
-                                    }
-                                }
-                                .swipeActions(edge: .leading) {
-                                    if event.state == .failed {
-                                        Button {
-                                            Task { try? await viewModel.service.retryParsing(eventID: event.id) }
-                                        } label: {
-                                            Label("Retry", systemImage: Icons.retry)
+                        ForEach(groupedEvents) { group in
+                            Section {
+                                ForEach(group.events) { event in
+                                    EventRowCard(event: event)
+                                        .onTapGesture {
+                                            selectedEvent = event
                                         }
-                                        .tint(Color.accent)
-                                    }
+                                        .listRowInsets(EdgeInsets(
+                                            top: .spacing(.xxSmall),
+                                            leading: .spacing(.medium),
+                                            bottom: .spacing(.xxSmall),
+                                            trailing: .spacing(.medium)
+                                        ))
+                                        .listRowSeparator(.hidden)
+                                        .listRowBackground(Color.clear)
+                                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                            Button(role: .destructive) {
+                                                Task { try? await viewModel.service.delete(eventID: event.id) }
+                                            } label: {
+                                                Label("Delete", systemImage: Icons.trash)
+                                            }
+                                        }
+                                        .swipeActions(edge: .leading) {
+                                            if event.state == .failed {
+                                                Button {
+                                                    Task {
+                                                        try? await viewModel.service.retryParsing(eventID: event.id)
+                                                    }
+                                                } label: {
+                                                    Label("Retry", systemImage: Icons.retry)
+                                                }
+                                                .tint(Color.accent)
+                                            }
+                                        }
                                 }
+                            } header: {
+                                Text(group.title)
+                                    .font(.uCaption)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(Color.secondaryLabel)
+                                    .textCase(nil)
+                            }
                         }
                     }
                     .listStyle(.plain)
@@ -241,7 +253,7 @@ private struct EventRowCard: View {
 
                 if event.state == .parsed || event.state == .heuristicParsed || event.state == .enriched,
                    let payload = event.parsedPayload() {
-                    ParsedMetadataView(payload: payload)
+                    ParsedMetadataView(payload: payload, rawInput: event.rawInput)
                 } else if event.state == .pending {
                     HStack(spacing: .spacing(.xxSmall)) {
                         ProgressView()
@@ -272,6 +284,7 @@ private struct EventRowCard: View {
 
 private struct ParsedMetadataView: View {
     let payload: HabitParseResult
+    var rawInput: String = ""
 
     var body: some View {
         UFlowLayout {
@@ -289,7 +302,9 @@ private struct ParsedMetadataView: View {
                 }
             }
 
-            if let notes = payload.notes, !notes.isEmpty {
+            // Only show notes that add information beyond the raw input itself.
+            if let notes = payload.notes, !notes.isEmpty,
+               !rawInput.localizedCaseInsensitiveContains(notes) {
                 Text(notes)
                     .font(.uCaption)
                     .foregroundStyle(Color.secondaryLabel)

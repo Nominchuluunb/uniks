@@ -86,15 +86,23 @@ final class QuickInputPanelManager {
             .clipShape(RoundedRectangle(cornerRadius: .radius(.large)))
         
         let panel = QuickInputPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 140),
-            styleMask: [.nonactivatingPanel, .borderless, .resizable],
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 180),
+            styleMask: [.nonactivatingPanel, .borderless],
             backing: .buffered,
             defer: false
         )
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.center()
-        panel.contentView = NSHostingView(rootView: contentView)
+
+        // Host the SwiftUI content with `sizingOptions = []` so the hosting view
+        // does NOT push its intrinsic content size back into the window during a
+        // layout pass. The panel owns its size; this prevents the reentrant
+        // `-layoutSubtreeIfNeeded` call AppKit flags as `_NSDetectedLayoutRecursion`.
+        let hostingView = NSHostingView(rootView: contentView)
+        hostingView.sizingOptions = []
+        hostingView.autoresizingMask = [.width, .height]
+        panel.contentView = hostingView
         panel.isReleasedWhenClosed = false
         panel.backgroundColor = .clear
         panel.isOpaque = false
