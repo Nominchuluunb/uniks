@@ -110,7 +110,7 @@ struct InspectorView: View {
                         }
                         
                         // Swift Charts Sparkline Graph
-                        if event.state == .parsed,
+                        if event.state == .parsed || event.state == .heuristicParsed || event.state == .enriched,
                            let category = event.parsedPayload()?.category,
                            !sparklineEvents(for: category).isEmpty {
                             VStack(alignment: .leading, spacing: .spacing(.xSmall)) {
@@ -208,7 +208,8 @@ struct InspectorView: View {
     // MARK: - Helper Methods & Subviews
     
     private func titleText(for event: HabitEvent) -> String {
-        guard event.state == .parsed, let payload = event.parsedPayload() else {
+        guard event.state == .parsed || event.state == .heuristicParsed || event.state == .enriched,
+              let payload = event.parsedPayload() else {
             return event.rawInput
         }
 
@@ -237,7 +238,7 @@ struct InspectorView: View {
     private func sparklineEvents(for category: String) -> [HabitEvent] {
         allEvents
             .filter {
-                $0.state == .parsed &&
+                ($0.state == .parsed || $0.state == .heuristicParsed || $0.state == .enriched) &&
                 $0.parsedPayload()?.category?.lowercased() == category.lowercased()
             }
             .suffix(8)

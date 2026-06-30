@@ -53,7 +53,7 @@ actor OllamaLLMEngine: LocalLLMEngine {
 
     /// Parses raw input by asking the local LLM to extract structured data.
     func parse(rawInput: String) async throws -> HabitParseResult {
-        let prompt = Self.buildExtractionPrompt(for: rawInput)
+        let prompt = ParsingPrompts.buildPrompt(rawInput: rawInput)
         let requestBody: [String: Any] = [
             "model": modelName,
             "prompt": prompt,
@@ -92,7 +92,12 @@ actor OllamaLLMEngine: LocalLLMEngine {
             throw OllamaLLMEngineError.decodingFailed
         }
 
-        // The model may wrap the JSON in markdown fences; strip them.
+        // Try JSON repair pipeline first
+        if let repaired = JSONRepairService.repair(responseText) {
+            return repaired
+        }
+
+        // Fallback: strip markdown and decode directly
         let cleaned = responseText
             .replacingOccurrences(of: "```json", with: "")
             .replacingOccurrences(of: "```", with: "")
@@ -109,20 +114,4 @@ actor OllamaLLMEngine: LocalLLMEngine {
         }
     }
 
-    /// Builds the prompt sent to the local LLM.
-    private static nonisolated func buildExtractionPrompt(for rawInput: String) -> String {
-        """
-        Extract structured information from the following user log entry.
-        Return ONLY a JSON object with these fields, all optional except "tags" which defaults to []:
-        {
-          "category": "broad category such as fitness, sleep, hydration, mood, work",
-          "value": numeric value as a number if present,
-          "unit": unit of measurement if present,
-          "tags": ["list", "of", "relevant", "tags"],
-          "notes": "any additional context"
-        }
-
-        User entry: "\(rawInput)"
-        """
-    }
 }

@@ -11,9 +11,9 @@ import SwiftData
 extension ModelContainer {
     /// Creates the canonical SwiftData container for Uniks.
     /// - Parameter inMemory: When `true`, uses an in-memory store (useful for previews and tests).
-    /// - Returns: A configured `ModelContainer` for `HabitEvent` and `Goal`.
+    /// - Returns: A configured `ModelContainer` for all Uniks models.
     static func uniksContainer(inMemory: Bool = false) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: UniksSchemaV2.self)
+        let schema = Schema(versionedSchema: UniksSchemaV3.self)
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: inMemory,

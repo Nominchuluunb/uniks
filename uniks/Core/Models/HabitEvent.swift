@@ -11,7 +11,9 @@ import SwiftData
 /// The persisted state of a habit event.
 enum HabitEventState: String, Codable, Sendable {
     case pending
+    case heuristicParsed
     case parsed
+    case enriched
     case failed
 }
 
@@ -25,6 +27,7 @@ final class HabitEvent {
     var rawInput: String
     var stateRaw: String
     var parsedPayloadJSON: String?
+    var enrichmentJSON: String?
     var createdAt: Date
     var updatedAt: Date
 
@@ -33,6 +36,7 @@ final class HabitEvent {
         self.rawInput = rawInput
         self.stateRaw = state.rawValue
         self.parsedPayloadJSON = nil
+        self.enrichmentJSON = nil
         self.createdAt = Date()
         self.updatedAt = Date()
     }
@@ -46,6 +50,11 @@ extension HabitEvent {
             stateRaw = newValue.rawValue
             updatedAt = Date()
         }
+    }
+
+    /// Whether the event has any parsed data (heuristic, LLM, or enriched).
+    var isParsed: Bool {
+        state == .parsed || state == .heuristicParsed || state == .enriched
     }
 
     /// Stores a structured parse result and transitions state to `.parsed`.

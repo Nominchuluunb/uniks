@@ -118,7 +118,9 @@ final class DashboardViewModel {
         }
 
         let filtered = events.filter { event in
-            guard event.state == .parsed else { return false }
+            guard event.state == .parsed || event.state == .heuristicParsed || event.state == .enriched else {
+                return false
+            }
             guard let startDate = range.startDate else { return true }
             return event.createdAt >= startDate
         }
@@ -316,7 +318,7 @@ final class DashboardViewModel {
         var categoryHours: [String: [Int]] = [:]
 
         for event in events.prefix(100) {
-            guard event.state == .parsed,
+            guard event.state == .parsed || event.state == .heuristicParsed || event.state == .enriched,
                   let cat = event.parsedPayload()?.category else { continue }
             let hour = calendar.component(.hour, from: event.createdAt)
             categoryHours[cat, default: []].append(hour)

@@ -4,7 +4,51 @@ All notable changes to Uniks are documented in this file.
 
 ## [Unreleased]
 
-### Added
+### Added — v2: Multi-Agent Pipeline & Feature Expansion
+
+#### Multi-Agent Parsing Pipeline
+- `HeuristicParser` — instant regex/pattern-based parsing (< 5ms) with category keyword dictionary and value+unit extraction.
+- `ParsingPrompts` — enhanced system prompt with 12+ few-shot examples, category taxonomy, and confidence scoring.
+- `JSONRepairService` — repairs malformed LLM JSON output (trailing commas, markdown fencing, unquoted keys).
+- `ParseConfidence` enum — categorizes confidence into `.high`, `.medium`, `.low` with semantic colors.
+- `EnrichmentActor` — background agent for category normalization (synonym dictionary), related event detection, and pattern analysis.
+- `UserCorrection` model + `UserCorrectionsStore` — feedback loop where user edits improve future parsing.
+- `ParsingPipeline` orchestrator — 5-stage pipeline (Heuristic → Corrections → LLM → Enrichment → Confidence) with per-stage cancellation and exponential backoff retry.
+- New `HabitEventState` cases: `.heuristicParsed`, `.enriched` for progressive refinement.
+- `enrichmentJSON` field on `HabitEvent` for storing enrichment metadata separately from parse results.
+- `confidence` field on `HabitParseResult` for scoring parse quality.
+
+#### UI/UX Polish
+- `AnimationTokens` — standardized animation presets (.fast, .standard, .spring, .springBouncy, .entrance).
+- `StaggeredAppear` modifier — sequential fade+slide entrance for list items and cards.
+- `USkeletonView`, `USkeletonRow`, `USkeletonCard` — shimmer loading placeholders matching real content layout.
+- `HapticEngine` — centralized iOS haptic feedback (light, medium, heavy, success, error, selection).
+- `ThemePreference` — working system/light/dark theme picker persisted to UserDefaults.
+- `UTabBar` — custom floating capsule tab bar for iOS with elevated FAB center button and hide-on-scroll.
+- `DensityPreference` — macOS compact/comfortable layout density modes.
+- `UBadge` updated with confidence-based color gradation (green/amber/red).
+
+#### Power Features
+- `UndoService` — actor-based undo/redo stack (20 actions) for create, delete, and edit operations.
+- `UToast` + `ToastManager` — in-app notification system with success/error/undo variants and auto-dismiss.
+- Bulk actions: `bulkDelete`, `bulkRetryParsing`, `bulkUpdateCategory` in `HabitEventService`.
+- `CategoryManagementView` — rename, merge, custom colors, create custom categories.
+- `CustomCategory` SwiftData model with keywords for heuristic parser integration.
+- `ExportService` — JSON and CSV export with date range and category filters, `ExportDocument` for fileExporter.
+- `ImportService` — JSON and CSV import with column mapping and duplicate detection.
+- `ImportView` — file picker UI with format preview and result summary.
+- `RecurringTemplate` SwiftData model — user-defined recurring habit templates.
+- `NotificationService` — local notification scheduling with repeating triggers and "Log Now" action.
+- `RecurringTemplateView` — CRUD interface for recurring templates with frequency and time settings.
+- `ShareCardView` — renders events as beautiful gradient image cards for sharing via ImageRenderer.
+
+#### Infrastructure
+- `UniksSchemaV3` — added UserCorrection, CustomCategory, RecurringTemplate, enrichmentJSON to migration plan.
+- `ParsingPipeline` replaces bare `ParsingActor` as the parsing actor in app entry point.
+- Toast overlay and theme preference applied at root view level.
+- Notification categories registered at app launch with reschedule-all.
+
+### Changed
 
 - Real streaming Gemma model download with progress, cancel, retry, resume, delete, and disk-space preflight.
 - `ModelStore` actor for cached model containers (instant repeated inference).

@@ -239,7 +239,8 @@ private struct EventRowCard: View {
                     .multilineTextAlignment(.leading)
                     .lineLimit(2)
 
-                if event.state == .parsed, let payload = event.parsedPayload() {
+                if event.state == .parsed || event.state == .heuristicParsed || event.state == .enriched,
+                   let payload = event.parsedPayload() {
                     ParsedMetadataView(payload: payload)
                 } else if event.state == .pending {
                     HStack(spacing: .spacing(.xxSmall)) {
@@ -362,7 +363,7 @@ private struct TimelineRow: View {
                         .lineLimit(2)
                         .foregroundStyle(Color.primaryLabel)
 
-                    if event.state == .parsed, let payload {
+                    if event.state == .parsed || event.state == .heuristicParsed || event.state == .enriched, let payload {
                         HStack(spacing: .spacing(.xSmall)) {
                             if let val = payload.value {
                                 Text("\(val, format: .number) \(payload.unit ?? "")")

@@ -17,6 +17,10 @@ struct UniksApp: App {
     private let ftsService: any FTSServiceProtocol
     private let service: HabitEventService
     private let modelStore: ModelStore
+    private let notificationService: NotificationService
+
+    @State private var toastManager = ToastManager()
+    @State private var themePreference = ThemePreference.current()
 
     #if os(macOS)
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
@@ -55,12 +59,15 @@ struct UniksApp: App {
         }
         self.ftsService = ftsService
 
-        let parser = ParsingActor(container: self.container, engine: engine)
+        // Use the multi-agent ParsingPipeline instead of bare ParsingActor
+        let pipeline = ParsingPipeline(container: self.container, engine: engine)
         self.service = HabitEventService(
             container: self.container,
-            parsingActor: parser,
+            parsingActor: pipeline,
             ftsService: self.ftsService
         )
+
+        self.notificationService = NotificationService(container: self.container)
 
         #if os(macOS)
         let viewModel = QuickInputViewModel(service: self.service)
@@ -79,6 +86,12 @@ struct UniksApp: App {
                 await modelStore.warmUp(ActiveModelPreference.effectiveModelID())
             }
         }
+
+        // Register notification categories and reschedule
+        Task {
+            await notificationService.registerCategories()
+            await notificationService.rescheduleAll()
+        }
     }
 
     var body: some Scene {
@@ -93,6 +106,9 @@ struct UniksApp: App {
                     #endif
                 }
             )
+            .environment(toastManager)
+            .toastOverlay()
+            .preferredColorScheme(themePreference.colorScheme)
         }
         .modelContainer(self.container)
     }

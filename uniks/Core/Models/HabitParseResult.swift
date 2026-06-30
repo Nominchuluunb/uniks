@@ -15,19 +15,22 @@ struct HabitParseResult: Codable, Sendable, Equatable {
     var unit: String?
     var tags: [String]?
     var notes: String?
+    var confidence: Double?
 
     init(
         category: String? = nil,
         value: Double? = nil,
         unit: String? = nil,
         tags: [String]? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        confidence: Double? = nil
     ) {
         self.category = category
         self.value = value
         self.unit = unit
         self.tags = tags
         self.notes = notes
+        self.confidence = confidence
     }
 }
 

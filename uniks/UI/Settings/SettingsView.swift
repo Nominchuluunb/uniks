@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import SwiftData
+import UniformTypeIdentifiers
 
 @MainActor
 enum SettingsTab: Hashable {
@@ -18,10 +20,18 @@ enum SettingsTab: Hashable {
 struct SettingsView: View {
     var activeTab: SettingsTab?
 
+    @Environment(\.modelContext) private var modelContext
     @State private var preference: EnginePreference = .current()
     @State private var modelManager = LocalModelManager()
     @State private var statuses: [String: LocalModelStatus] = [:]
     @State private var activeModelID: String? = ActiveModelPreference.current()
+    @State private var themePreference: ThemePreference = .current()
+    @State private var isShowingExport = false
+    @State private var isShowingImport = false
+    @State private var isShowingCategories = false
+    @State private var isShowingTemplates = false
+    @State private var exportFormat: ExportFormat = .json
+    @State private var exportData: Data?
 
     init(activeTab: SettingsTab? = nil) {
         self.activeTab = activeTab
@@ -43,6 +53,8 @@ extension SettingsView {
                 engineSection
                 modelsSection
                 appearanceSection
+                categoriesSection
+                templatesSection
                 dataExportSection
                 keyboardShortcutsSection
                 privacySection
@@ -50,6 +62,24 @@ extension SettingsView {
             .navigationTitle("Settings")
         }
         .task { await refreshStatuses() }
+        .sheet(isPresented: $isShowingCategories) {
+            CategoryManagementView()
+        }
+        .sheet(isPresented: $isShowingImport) {
+            ImportView(importService: ImportService(container: modelContainer, ftsService: ftsService))
+        }
+        .fileExporter(
+            isPresented: $isShowingExport,
+            document: ExportDocument(data: exportData ?? Data()),
+            contentType: exportFormat == .json ? .json : .commaSeparatedText,
+            defaultFilename: "uniks-export.\(exportFormat.fileExtension)"
+        ) { _ in }
+        .task(id: isShowingExport) {
+            if isShowingExport {
+                let exportService = ExportService(container: modelContainer)
+                exportData = try? await exportService.export(format: exportFormat)
+            }
+        }
     }
 
     private var macOSBody: some View {
@@ -176,12 +206,15 @@ extension SettingsView {
             USectionHeader(icon: "paintbrush", title: "Appearance")
 
             VStack(alignment: .leading, spacing: .spacing(.small)) {
-                Picker("Theme", selection: .constant("system")) {
-                    Text("System").tag("system")
-                    Text("Light").tag("light")
-                    Text("Dark").tag("dark")
+                Picker("Theme", selection: $themePreference) {
+                    ForEach(ThemePreference.allCases, id: \.self) { theme in
+                        Text(theme.displayName).tag(theme)
+                    }
                 }
                 .pickerStyle(.segmented)
+                .onChange(of: themePreference) { _, newValue in
+                    newValue.save()
+                }
 
                 Text("Match your system appearance or choose a preferred theme.")
                     .font(.uCaption2)
@@ -196,15 +229,25 @@ extension SettingsView {
 
     private var dataExportSection: some View {
         VStack(alignment: .leading, spacing: .spacing(.small)) {
-            USectionHeader(icon: "square.and.arrow.up", title: "Data Export")
+            USectionHeader(icon: "square.and.arrow.up", title: "Data Export & Import")
 
             VStack(alignment: .leading, spacing: .spacing(.small)) {
-                Text("Export all your events as JSON for backup or analysis. Your data is yours.")
+                Text("Export all your events as JSON or CSV for backup or analysis. Import from files.")
                     .font(.uFootnote)
                     .foregroundStyle(Color.secondaryLabel)
 
-                UButton("Export as JSON", style: .secondary) {
-                    // Export triggered
+                HStack(spacing: .spacing(.small)) {
+                    UButton("Export JSON", style: .secondary) {
+                        isShowingExport = true
+                        exportFormat = .json
+                    }
+                    UButton("Export CSV", style: .secondary) {
+                        isShowingExport = true
+                        exportFormat = .csv
+                    }
+                    UButton("Import", style: .secondary) {
+                        isShowingImport = true
+                    }
                 }
             }
             .padding(.spacing(.medium))
@@ -244,6 +287,56 @@ extension SettingsView {
     }
 
     // MARK: - Actions
+
+    private var modelContainer: ModelContainer {
+        modelContext.container
+    }
+
+    private var ftsService: any FTSServiceProtocol {
+        FTSService.inMemory()
+    }
+
+    // MARK: - Categories Section
+
+    private var categoriesSection: some View {
+        VStack(alignment: .leading, spacing: .spacing(.small)) {
+            USectionHeader(icon: "folder.fill", title: "Categories")
+
+            VStack(alignment: .leading, spacing: .spacing(.small)) {
+                Text("Manage, rename, merge, and customize category colors.")
+                    .font(.uFootnote)
+                    .foregroundStyle(Color.secondaryLabel)
+
+                UButton("Manage Categories", style: .secondary) {
+                    isShowingCategories = true
+                }
+            }
+            .padding(.spacing(.medium))
+            .background(Color.secondaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
+        }
+    }
+
+    // MARK: - Templates Section
+
+    private var templatesSection: some View {
+        VStack(alignment: .leading, spacing: .spacing(.small)) {
+            USectionHeader(icon: "bell.badge", title: "Recurring Templates")
+
+            VStack(alignment: .leading, spacing: .spacing(.small)) {
+                Text("Set up recurring reminders to log your habits consistently.")
+                    .font(.uFootnote)
+                    .foregroundStyle(Color.secondaryLabel)
+
+                UButton("Manage Templates", style: .secondary) {
+                    isShowingTemplates = true
+                }
+            }
+            .padding(.spacing(.medium))
+            .background(Color.secondaryGroupedBackground, in: RoundedRectangle(cornerRadius: .radius(.medium)))
+        }
+    }
+
+    // MARK: - Refresh & Model Actions
 
     private func refreshStatuses() async {
         await modelManager.refreshStatuses()
