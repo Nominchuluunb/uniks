@@ -13,6 +13,7 @@ actor HabitEventService {
     private let container: ModelContainer
     private let parsingActor: any ParsingActorProtocol
     private let ftsService: any FTSServiceProtocol
+    private let heuristicParser = HeuristicParser()
 
     init(
         container: ModelContainer,
@@ -24,7 +25,8 @@ actor HabitEventService {
         self.ftsService = ftsService
     }
 
-    /// Saves the raw event, indexes it for search, and triggers background parsing.
+    /// Saves the raw event, indexes it for search, runs heuristic parse immediately,
+    /// and triggers background LLM parsing for refinement.
     /// Automatically parses relative time expressions (e.g. "yesterday", "2 hours ago")
     /// to override the event timestamp.
     /// - Parameter rawInput: The user's original text.
@@ -40,6 +42,14 @@ actor HabitEventService {
         if let resolved = timeResult?.resolvedDate {
             event.createdAt = resolved
         }
+
+        // Stage 1: Fast heuristic parse (synchronous, < 5ms)
+        let heuristicResult = heuristicParser.parse(rawInput: effectiveInput)
+        if heuristicResult.category != nil || heuristicResult.value != nil {
+            event.setParsedPayload(heuristicResult)
+            event.state = .heuristicParsed
+        }
+
         context.insert(event)
         try context.save()
 
@@ -48,6 +58,7 @@ actor HabitEventService {
 
         try await self.ftsService.index(eventID: eventID, rawInput: raw)
 
+        // Stage 2+: Background LLM parsing for refinement
         Task {
             await self.parsingActor.parseAndSave(eventID: eventID)
         }
@@ -144,5 +155,71 @@ actor HabitEventService {
             if result.count >= limit { break }
         }
         return result
+    }
+
+    // MARK: - Bulk Operations
+
+    /// Deletes multiple events by IDs.
+    /// - Parameter ids: The event IDs to delete.
+    /// - Returns: Number of events actually deleted.
+    @discardableResult
+    func bulkDelete(ids: Set<UUID>) async throws -> Int {
+        let context = ModelContext(self.container)
+        var deleted = 0
+        for id in ids {
+            let idValue = id
+            let descriptor = FetchDescriptor<HabitEvent>(
+                predicate: #Predicate { $0.id == idValue }
+            )
+            if let event = try? context.fetch(descriptor).first {
+                context.delete(event)
+                try? await self.ftsService.remove(eventID: id)
+                deleted += 1
+            }
+        }
+        try context.save()
+        return deleted
+    }
+
+    /// Re-queues multiple events for background parsing.
+    /// - Parameter ids: The event IDs to re-parse.
+    func bulkRetryParsing(ids: Set<UUID>) async throws {
+        let context = ModelContext(self.container)
+        for id in ids {
+            let idValue = id
+            let descriptor = FetchDescriptor<HabitEvent>(
+                predicate: #Predicate { $0.id == idValue }
+            )
+            if let event = try? context.fetch(descriptor).first {
+                event.state = .pending
+            }
+        }
+        try context.save()
+
+        for id in ids {
+            Task {
+                await self.parsingActor.parseAndSave(eventID: id)
+            }
+        }
+    }
+
+    /// Updates the category of multiple events.
+    /// - Parameters:
+    ///   - ids: The event IDs to update.
+    ///   - category: The new category to assign.
+    func bulkUpdateCategory(ids: Set<UUID>, category: String) async throws {
+        let context = ModelContext(self.container)
+        for id in ids {
+            let idValue = id
+            let descriptor = FetchDescriptor<HabitEvent>(
+                predicate: #Predicate { $0.id == idValue }
+            )
+            if let event = try? context.fetch(descriptor).first {
+                var payload = event.parsedPayload() ?? HabitParseResult()
+                payload.category = category
+                event.setParsedPayload(payload)
+            }
+        }
+        try context.save()
     }
 }

@@ -39,11 +39,10 @@ actor MLXLLMEngine: LocalLLMEngine {
         #else
         let modelContainer = try await modelStore.container(for: modelID)
 
+        let messages = ParsingPrompts.buildMessages(rawInput: rawInput)
+
         let stream = try await modelContainer.perform { context in
-            let userInput = UserInput(messages: [
-                ["role": "system", "content": Self.extractionSystemPrompt],
-                ["role": "user", "content": rawInput]
-            ])
+            let userInput = UserInput(messages: messages)
             let input = try await context.processor.prepare(input: userInput)
             return try MLXLMCommon.generate(
                 input: input,
@@ -59,6 +58,12 @@ actor MLXLLMEngine: LocalLLMEngine {
             }
         }
 
+        // Try JSON repair pipeline
+        if let repaired = JSONRepairService.repair(output) {
+            return repaired
+        }
+
+        // Fallback: direct decode
         let cleaned = output
             .replacingOccurrences(of: "```json", with: "")
             .replacingOccurrences(of: "```", with: "")
@@ -73,10 +78,6 @@ actor MLXLLMEngine: LocalLLMEngine {
     }
 
     private static var extractionSystemPrompt: String {
-        """
-        You extract structured data from a user's personal log entry.
-        Respond with a single JSON object containing optional keys:
-        category, value (number), unit, tags (array of strings), notes.
-        """
+        ParsingPrompts.systemPrompt
     }
 }

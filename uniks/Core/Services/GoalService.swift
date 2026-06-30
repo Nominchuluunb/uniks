@@ -62,7 +62,7 @@ actor GoalService {
             let periodStart = periodStartDate(for: goal.goalFrequency, now: now, calendar: calendar)
             var count = 0
             for event in events {
-                guard event.state == .parsed,
+                guard event.state == .parsed || event.state == .heuristicParsed || event.state == .enriched,
                       event.createdAt >= periodStart,
                       let payload = event.parsedPayload(),
                       let cat = payload.category?.lowercased(),

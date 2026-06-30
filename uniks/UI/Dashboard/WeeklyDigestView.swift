@@ -101,8 +101,8 @@ func computeWeeklyDigest(container: ModelContainer) -> WeeklyDigest? {
     guard let weekStart = calendar.date(byAdding: .day, value: -6, to: today),
           let lastWeekStart = calendar.date(byAdding: .day, value: -13, to: today) else { return nil }
 
-    let thisWeek = events.filter { $0.createdAt >= weekStart && $0.state == .parsed }
-    let lastWeek = events.filter { $0.createdAt >= lastWeekStart && $0.createdAt < weekStart && $0.state == .parsed }
+    let thisWeek = events.filter { $0.createdAt >= weekStart && ($0.state == .parsed || $0.state == .heuristicParsed || $0.state == .enriched) }
+    let lastWeek = events.filter { $0.createdAt >= lastWeekStart && $0.createdAt < weekStart && ($0.state == .parsed || $0.state == .heuristicParsed || $0.state == .enriched) }
 
     // Categories
     var catCounts: [String: Int] = [:]
@@ -116,7 +116,7 @@ func computeWeeklyDigest(container: ModelContainer) -> WeeklyDigest? {
     // Streak
     var streak = 0
     var day = today
-    let allParsed = Set(events.filter { $0.state == .parsed }.map { calendar.startOfDay(for: $0.createdAt) })
+    let allParsed = Set(events.filter { $0.state == .parsed || $0.state == .heuristicParsed || $0.state == .enriched }.map { calendar.startOfDay(for: $0.createdAt) })
     while allParsed.contains(day) {
         streak += 1
         guard let prev = calendar.date(byAdding: .day, value: -1, to: day) else { break }

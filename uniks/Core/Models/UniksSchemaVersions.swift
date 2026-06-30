@@ -47,19 +47,34 @@ enum UniksSchemaV2: VersionedSchema {
     }
 }
 
+// MARK: - V3: Multi-agent pipeline (UserCorrection, CustomCategory, RecurringTemplate, enrichmentJSON)
+
+enum UniksSchemaV3: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(3, 0, 0) }
+
+    static var models: [any PersistentModel.Type] {
+        [HabitEvent.self, Goal.self, UserCorrection.self, CustomCategory.self, RecurringTemplate.self]
+    }
+}
+
 // MARK: - Migration Plan
 
 enum UniksMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [UniksSchemaV1.self, UniksSchemaV2.self]
+        [UniksSchemaV1.self, UniksSchemaV2.self, UniksSchemaV3.self]
     }
 
     static var stages: [MigrationStage] {
-        [migrateV1toV2]
+        [migrateV1toV2, migrateV2toV3]
     }
 
     static let migrateV1toV2 = MigrationStage.lightweight(
         fromVersion: UniksSchemaV1.self,
         toVersion: UniksSchemaV2.self
+    )
+
+    static let migrateV2toV3 = MigrationStage.lightweight(
+        fromVersion: UniksSchemaV2.self,
+        toVersion: UniksSchemaV3.self
     )
 }
